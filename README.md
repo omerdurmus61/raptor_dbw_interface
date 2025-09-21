@@ -67,9 +67,10 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/control/command/gear_cmd`                      | `/raptor_dbw_interface/gear_cmd`                  | gear command                                                            |
   | `/control/command/turn_indicators_cmd`           | `/raptor_dbw_interface/misc_cmd`                  | turn indicators command                                                 |
   | `/control/command/hazard_lights_cmd`             | `/raptor_dbw_interface/misc_cmd`                  | hazard lights command                                                   |
-  | `/vehicle/engage`                                |                                                   | engage command                                                          |
-  | `/control/command/emergency_cmd`                 |                                                   | emergency command                                                       |
-  | Subscribed Topic from DBW                        | Published Topic to Autoware                       | Second Topic (accel & brake pedal etc.)                                 |
+  | `/vehicle/engage`                                |                      ?                            | engage command                                                          |
+  | `/control/command/emergency_cmd`                 |                      ?                            | emergency command                                                       |
+  
+  | Subscribed Topic from DBW                        | Published Topic to Autoware                       | Second Topic (accel & brake pedal etc.) or notes                        |
   | -------------------------------------------------| ------------------------------------------------- | ----------------------------------------------------------------------- |
   | `/raptor_dbw_interface/steering_report`          | `/vehicle/status/steering_status`                 | current steering wheel angle                                            |
   | `/raptor_dbw_interface/wheel_speed_report`       |  odometry                                         | current wheel speed                                                     |
@@ -77,4 +78,4 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/raptor_dbw_interface/brake_report`             | `/vehicle/status/actuation_status`  	             | current brake pedal                                                     |
   | `/raptor_dbw_interface/gear_report`              | `/vehicle/status/gear_status`                     | current gear status                                                     |
   | `/raptor_dbw_interface/driver_input_report`      | `/vehicle/status/turn_indicators_status`          | current turn indicators status                                          |
-  | `/raptor_dbw_interface/misc_report`              |                                                   | current status of other parameters (e.g. override_active, can_time_out) |
+  | `/raptor_dbw_interface/misc_report`              |                     ?                             | current status of other parameters (e.g. override_active, can_time_out) |
