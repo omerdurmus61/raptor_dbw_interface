@@ -80,3 +80,91 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/vehicle/status/actuation_status`       | autoware_vehicle_msgs::msg::ActuationStatusStamped | actuation (accel/brake pedal, steering wheel) status |
 
 
+Perfect 🚀 Here’s the same structure but now with **checkboxes** so you can track progress directly in your GitHub README.
+
+---
+##    Development Guide
+## 🔹 Autoware → DBW
+
+### Subscribers
+
+* [x] **ackermann\_sub\_** → listens: `/control/command/control_cmd`
+  Callback: `ackermannCmdCallback`
+
+### Publishers
+
+* [x] **accel\_pub\_** → `/raptor_dbw_interface/accelerator_pedal_cmd`
+  Used in: `ackermannCmdCallback`
+
+* [x] **brake\_pub\_** → `/raptor_dbw_interface/brake_cmd`
+  Used in: `ackermannCmdCallback`
+
+* [x] **steering\_pub\_** → `/raptor_dbw_interface/steering_cmd`
+  Used in: `ackermannCmdCallback`
+
+* [x] **gear\_pub\_** → `/raptor_dbw_interface/gear_cmd`
+  Used in: `ackermannCmdCallback`
+
+* [x] **enable\_pub\_** → `/raptor_dbw_interface/global_enable_cmd`
+  Used in: `ackermannCmdCallback`
+
+---
+
+## 🔹 DBW → Autoware
+
+### Subscribers
+
+* [ ] **steering\_report\_sub\_** → listens: `/raptor_dbw_interface/steering_report`
+  Callback: `steeringReportCallback`
+
+* [ ] **brake\_report\_sub\_** → listens: `/raptor_dbw_interface/brake_report`
+  Callback: `brakeReportCallback`
+
+* [ ] **wheel\_speed\_report\_sub\_** → listens: `/raptor_dbw_interface/wheel_speed_report`
+  Callback: `wheelSpeedReportCallback`
+
+* [ ] **gear\_report\_sub\_** → listens: `/raptor_dbw_interface/gear_report`
+  Callback: `gearReportCallback`
+
+* [ ] **misc\_report\_sub\_** → listens: `/raptor_dbw_interface/misc_report`
+  Callback: `miscReportCallback`
+
+### Publishers
+
+* [ ] **steering\_status\_pub\_** → `/vehicle/status/steering_status`
+  Published in: `steeringReportCallback`
+
+* [ ] **velocity\_status\_pub\_** → `/vehicle/status/velocity_status`
+  Published in: `wheelSpeedReportCallback`
+
+* [ ] **control\_mode\_pub\_** → `/vehicle/status/control_mode`
+  Published in: `miscReportCallback`
+
+* [ ] **gear\_status\_pub\_** → `/vehicle/status/gear_status`
+  Published in: `gearReportCallback`
+
+* [ ] **turn\_indicators\_pub\_** → `/vehicle/status/turn_indicators_status`
+  Published in: `miscReportCallback`
+
+* [ ] **hazard\_lights\_pub\_** → `/vehicle/status/hazard_lights_status`
+  Published in: `miscReportCallback`
+
+---
+
+## 🔹 Summary
+
+* **Subscribers (6)** → each has a dedicated callback
+* **Publishers (11)** → triggered inside the corresponding callbacks
+
+👉 Execution flow:
+
+* `ackermannCmdCallback` → triggers 5 publishers ✅
+* `steeringReportCallback` → triggers 1 publisher ⬜
+* `wheelSpeedReportCallback` → triggers 1 publisher ⬜
+* `gearReportCallback` → triggers 1 publisher ⬜
+* `miscReportCallback` → triggers 3 publishers ⬜
+
+---
+
+
+
