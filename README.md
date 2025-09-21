@@ -26,9 +26,9 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/raptor_dbw_interface/misc_report`              |                                                   | current status of other parameters (e.g. override_active, can_time_out) |
 
 
-## Input / Output
+## Input / Output Topics and Their Message Types
 
-### Input topics
+### Input Topics
 
 - From Autoware
 
@@ -54,7 +54,7 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/raptor_dbw_interface/driver_input_report`      | raptor_dbw_msgs::msg::DriverInputReport      | current turn indicators status                                          |
   | `/raptor_dbw_interface/misc_report`              | raptor_dbw_msgs::msg::MiscReport             | current status of other parameters (e.g. override_active, can_time_out) |
 
-### Output topics
+### Output Topics
 
 - To Raptor DBW
 
