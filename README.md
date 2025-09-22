@@ -15,7 +15,7 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/vehicle/engage`                                |                                                   | engage command                                                          |
   | `/control/command/emergency_cmd`                 |                                                   | emergency command                                                       |
   
-  | Subscribed Topic from DBW                        | Published Topic to Autoware                       | Second Topic (accel & brake pedal etc.) or notes                        |
+  | Subscribed Topic from DBW                        | Published Topic via Autoware                      | Second Topic (accel & brake pedal etc.) or notes                        |
   | -------------------------------------------------| ------------------------------------------------- | ----------------------------------------------------------------------- |
   | `/raptor_dbw_interface/steering_report`          | `/vehicle/status/steering_status`                 | current steering wheel angle                                            |
   | `/raptor_dbw_interface/wheel_speed_report`       |  odometry                                         | current wheel speed                                                     |
@@ -80,10 +80,10 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/vehicle/status/actuation_status`       | autoware_vehicle_msgs::msg::ActuationStatusStamped | actuation (accel/brake pedal, steering wheel) status |
 
 
-Perfect 🚀 Here’s the same structure but now with **checkboxes** so you can track progress directly in your GitHub README.
+
 
 ---
-##    Development Guide
+##    Development Path
 ## 🔹 Autoware → DBW
 
 ### Subscribers
