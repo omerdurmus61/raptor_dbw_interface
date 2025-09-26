@@ -44,7 +44,7 @@ private:
   void ackermannCmdCallback(const autoware_control_msgs::msg::Control::SharedPtr msg);
 
   // Subscribers (from Autoware)
-  rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr ackermann_sub_;
+  rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr           ackermann_sub_;
 
   // Publishers (to Autoware reports)
   rclcpp::Publisher<autoware_vehicle_msgs::msg::ControlModeReport>::SharedPtr    control_mode_pub_;
@@ -56,21 +56,21 @@ private:
   rclcpp::Publisher<tier4_vehicle_msgs::msg::ActuationStatusStamped>::SharedPtr  actuation_status_pub_;
   
   // Publishers (to Raptor DBW)
-  rclcpp::Publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>::SharedPtr accel_pub_;
-  rclcpp::Publisher<raptor_dbw_msgs::msg::BrakeCmd>::SharedPtr            brake_pub_;
-  rclcpp::Publisher<raptor_dbw_msgs::msg::SteeringCmd>::SharedPtr         steering_pub_;
-  rclcpp::Publisher<raptor_dbw_msgs::msg::GearCmd>::SharedPtr             gear_pub_;
-  rclcpp::Publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>::SharedPtr     enable_pub_;
-  rclcpp::Publisher<raptor_dbw_msgs::msg::MiscCmd>::SharedPtr             misc_pub_;
+  rclcpp::Publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>::SharedPtr        accel_pub_;
+  rclcpp::Publisher<raptor_dbw_msgs::msg::BrakeCmd>::SharedPtr                   brake_pub_;
+  rclcpp::Publisher<raptor_dbw_msgs::msg::SteeringCmd>::SharedPtr                steering_pub_;
+  rclcpp::Publisher<raptor_dbw_msgs::msg::GearCmd>::SharedPtr                    gear_pub_;
+  rclcpp::Publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>::SharedPtr            enable_pub_;
+  rclcpp::Publisher<raptor_dbw_msgs::msg::MiscCmd>::SharedPtr                    misc_pub_;
 
   // Subscribers (from DBW reports)
-  rclcpp::Subscription<raptor_dbw_msgs::msg::SteeringReport>::SharedPtr         steering_report_sub_;
-  rclcpp::Subscription<raptor_dbw_msgs::msg::WheelSpeedReport>::SharedPtr       wheel_speed_report_sub_;
-  rclcpp::Subscription<raptor_dbw_msgs::msg::AcceleratorPedalReport>::SharedPtr accel_report_sub_;
-  rclcpp::Subscription<raptor_dbw_msgs::msg::BrakeReport>::SharedPtr            brake_report_sub_;
-  rclcpp::Subscription<raptor_dbw_msgs::msg::GearReport>::SharedPtr             gear_report_sub_;
-  rclcpp::Subscription<raptor_dbw_msgs::msg::DriverInputReport>::SharedPtr      driver_input_report_sub_;
-  rclcpp::Subscription<raptor_dbw_msgs::msg::MiscReport>::SharedPtr             misc_report_sub_;
+  rclcpp::Subscription<raptor_dbw_msgs::msg::SteeringReport>::SharedPtr          steering_report_sub_;
+  rclcpp::Subscription<raptor_dbw_msgs::msg::WheelSpeedReport>::SharedPtr        wheel_speed_report_sub_;
+  rclcpp::Subscription<raptor_dbw_msgs::msg::AcceleratorPedalReport>::SharedPtr  accel_report_sub_;
+  rclcpp::Subscription<raptor_dbw_msgs::msg::BrakeReport>::SharedPtr             brake_report_sub_;
+  rclcpp::Subscription<raptor_dbw_msgs::msg::GearReport>::SharedPtr              gear_report_sub_;
+  rclcpp::Subscription<raptor_dbw_msgs::msg::DriverInputReport>::SharedPtr       driver_input_report_sub_;
+  rclcpp::Subscription<raptor_dbw_msgs::msg::MiscReport>::SharedPtr              misc_report_sub_;
 
   // Callback functions for DBW reports 
   void steeringReportCallback(const raptor_dbw_msgs::msg::SteeringReport::SharedPtr msg);
