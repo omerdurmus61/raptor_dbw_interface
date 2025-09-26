@@ -8,6 +8,7 @@
 #include "raptor_dbw_msgs/msg/steering_cmd.hpp"
 #include "raptor_dbw_msgs/msg/gear_cmd.hpp"
 #include "raptor_dbw_msgs/msg/global_enable_cmd.hpp"
+#include "raptor_dbw_msgs/msg/misc_cmd.hpp"
 
 class RaptorDbwInterface : public rclcpp::Node
 {
@@ -24,6 +25,10 @@ private:
   rclcpp::Publisher<raptor_dbw_msgs::msg::SteeringCmd>::SharedPtr steering_pub_;
   rclcpp::Publisher<raptor_dbw_msgs::msg::GearCmd>::SharedPtr gear_pub_;
   rclcpp::Publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>::SharedPtr enable_pub_;
+  rclcpp::Publisher<raptor_dbw_msgs::msg::MiscCmd>::SharedPtr misc_pub_;
+
+  // Rolling Counter
+  uint8_t counter_;
 };
 
 #endif  // RAPTOR_DBW_INTERFACE__RAPTOR_DBW_INTERFACE_HPP_
