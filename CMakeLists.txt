@@ -12,6 +12,7 @@ find_package(std_msgs REQUIRED)
 find_package(raptor_dbw_msgs REQUIRED)
 find_package(autoware_vehicle_msgs REQUIRED)
 find_package(autoware_control_msgs REQUIRED)
+find_package(tier4_vehicle_msgs REQUIRED)
 
 
 if(BUILD_TESTING)
@@ -34,6 +35,7 @@ ament_target_dependencies(raptor_dbw_interface_node
   raptor_dbw_msgs
   autoware_vehicle_msgs
   autoware_control_msgs
+  tier4_vehicle_msgs
 )
 
 install(TARGETS
