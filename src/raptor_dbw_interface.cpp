@@ -11,11 +11,11 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   brake_override_active_ = false;
   accel_override_active_ = false;
   steering_override_active_ = false;
-  global_enable_active_ = false;
+  global_enable_active_ = true;
 
   // Publishers (to Raptor DBW)
   accel_pub_    = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>                ("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
-  brake_pub_    = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>                           ( "/raptor_dbw_interface/brake_cmd", 10);
+  brake_pub_    = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>                           ("/raptor_dbw_interface/brake_cmd", 10);
   steering_pub_ = this->create_publisher<raptor_dbw_msgs::msg::SteeringCmd>                        ("/raptor_dbw_interface/steering_cmd", 10);
   gear_pub_     = this->create_publisher<raptor_dbw_msgs::msg::GearCmd>                            ("/raptor_dbw_interface/gear_cmd", 10);
   enable_pub_   = this->create_publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>                    ("/raptor_dbw_interface/global_enable_cmd", 10);
@@ -37,6 +37,23 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   ackermann_sub_ = this->create_subscription<autoware_control_msgs::msg::Control>(
     "/control/command/control_cmd",10,
     std::bind(&RaptorDbwInterface::ackermannCmdCallback, this, std::placeholders::_1));
+
+  // Subscribers (from Autoware additional topics)
+  gear_cmd_sub_ = this->create_subscription<autoware_vehicle_msgs::msg::GearCommand>(
+    "/control/command/gear_cmd", 10,
+    std::bind(&RaptorDbwInterface::gearCmdCallback, this, std::placeholders::_1));
+
+  turn_cmd_sub_ = this->create_subscription<autoware_vehicle_msgs::msg::TurnIndicatorsCommand>(
+    "/control/command/turn_indicators_cmd", 10,
+    std::bind(&RaptorDbwInterface::turnCmdCallback, this, std::placeholders::_1));
+
+  hazard_cmd_sub_ = this->create_subscription<autoware_vehicle_msgs::msg::HazardLightsCommand>(
+    "/control/command/hazard_lights_cmd", 10,
+    std::bind(&RaptorDbwInterface::hazardCmdCallback, this, std::placeholders::_1));
+
+  engage_sub_ = this->create_subscription<std_msgs::msg::Bool>(
+    "/vehicle/engage", 10,
+    std::bind(&RaptorDbwInterface::engageCallback, this, std::placeholders::_1));
 
   // Subscribers (from DBW reports)
   steering_report_sub_ = this->create_subscription<raptor_dbw_msgs::msg::SteeringReport>(
@@ -79,17 +96,20 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   // Extract data from Autoware command
   double speed = msg->longitudinal.velocity;
   double accel = msg->longitudinal.acceleration;
-  double steering_angle = msg->lateral.steering_tire_angle;
+  double steering_tier_angle = msg->lateral.steering_tire_angle;
 
-  // watchdog counter
+  // Watchdog counter
   counter_++;
   if (counter_ > 15) {
     counter_ = 0;
   }
 
+  gear_cmd_.rolling_counter = counter_;
+  misc_cmd_.rolling_counter = counter_;
+  enable_cmd_.rolling_counter = counter_;
+
   // Accelerator command 
   raptor_dbw_msgs::msg::AcceleratorPedalCmd accel_cmd;
-  //accel_cmd.pedal_cmd = (accel > 0.0) ? std::min(accel, 1.0) : 0.0;  // [0-1] 
   accel_cmd.speed_cmd = speed;
   accel_cmd.enable = true;
   accel_cmd.rolling_counter = counter_;
@@ -109,34 +129,46 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 
   // Steering command
   raptor_dbw_msgs::msg::SteeringCmd steer_cmd;
-  steer_cmd.angle_cmd = steering_angle;  // radian
+  // Autoware (tire angle) → DBW (steering wheel angle)
+  steer_cmd.angle_cmd = steering_tier_angle * steering_ratio_;  
   steer_cmd.enable = true;
   steer_cmd.rolling_counter = counter_;
   steering_pub_->publish(steer_cmd);
 
   // Gear command (default DRIVE)
-  raptor_dbw_msgs::msg::GearCmd gear_cmd;
-  gear_cmd.cmd.gear = raptor_dbw_msgs::msg::Gear::DRIVE;
-  gear_cmd.rolling_counter = counter_;
-  gear_pub_->publish(gear_cmd);
+  // raptor_dbw_msgs::msg::GearCmd gear_cmd;
+  // gear_cmd.cmd.gear = raptor_dbw_msgs::msg::Gear::DRIVE;
+  // gear_cmd.rolling_counter = counter_;
+  // gear_pub_->publish(gear_cmd);
+  gear_pub_->publish(gear_cmd_);
 
   // Turn signal
-  raptor_dbw_msgs::msg::MiscCmd misc_msg;
-  misc_msg.rolling_counter = counter_;
-  misc_pub_->publish(misc_msg);
+  // raptor_dbw_msgs::msg::MiscCmd misc_msg;
+  // misc_msg.rolling_counter = counter_;
+  // misc_pub_->publish(misc_msg);
+  misc_cmd_.cmd.value =
+  (misc_hazard_cmd_.cmd.value == raptor_dbw_msgs::msg::TurnSignal::HAZARDS)
+    ? raptor_dbw_msgs::msg::TurnSignal::HAZARDS
+    : misc_turn_cmd_.cmd.value;
+
+  misc_pub_->publish(misc_cmd_);
 
   // Enable command 
-  raptor_dbw_msgs::msg::GlobalEnableCmd enable_cmd;
-  enable_cmd.global_enable = true;
-  global_enable_active_ = enable_cmd.global_enable;
-  enable_cmd.rolling_counter = counter_;
-  enable_pub_->publish(enable_cmd);
+  // raptor_dbw_msgs::msg::GlobalEnableCmd enable_cmd;
+  // enable_cmd.global_enable = true;
+  // global_enable_active_ = enable_cmd.global_enable;
+  // enable_cmd.rolling_counter = counter_;
+  // enable_pub_->publish(enable_cmd);
+  enable_pub_->publish(enable_cmd_);
+  global_enable_active_ = true;
+
 }
 
 // === DBW → Autoware reports ===
 
 void RaptorDbwInterface::publishActuationStatusTimerCallback()
 {
+  actuation_status_data_.header.stamp = this->now();
   actuation_status_pub_->publish(actuation_status_data_);
 }
 
@@ -146,7 +178,6 @@ void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::Stee
   autoware_vehicle_msgs::msg::SteeringReport out;
 
   out.stamp = this->now();
-  actuation_status_data_.header.stamp = this->now();
 
   // (steering wheel -> tire angle) unit conversion might be required
   out.steering_tire_angle = msg->steering_wheel_angle / steering_ratio_;  
@@ -159,9 +190,23 @@ void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::Stee
 
 }
 
-void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg)
+void RaptorDbwInterface::accelReportCallback(const raptor_dbw_msgs::msg::AcceleratorPedalReport::SharedPtr msg)
 {
-  // odometry model might be used here
+  actuation_status_data_.status.accel_status = msg->pedal_output;
+  accel_override_active_ = msg->driver_activity;
+}
+
+void RaptorDbwInterface::brakeReportCallback(const raptor_dbw_msgs::msg::BrakeReport::SharedPtr msg)
+{
+  actuation_status_data_.status.brake_status = msg->pedal_output;
+  brake_override_active_ = msg->driver_activity;
+
+}
+
+void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg)
+{ 
+  (void)msg;
+  // TO DO: odometry model might be used here
 
   /*
   // TO DO: The velocity_status can be calculated based on the velocity of each wheel 
@@ -176,21 +221,6 @@ void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::Wh
 
   velocity_pub_->publish(out);
   */
-}
-
-void RaptorDbwInterface::accelReportCallback(const raptor_dbw_msgs::msg::AcceleratorPedalReport::SharedPtr msg)
-{
-  actuation_status_data_.header.stamp = this->now();
-  actuation_status_data_.status.accel_status = msg->pedal_output;
-  accel_override_active_ = msg->driver_activity;
-}
-
-void RaptorDbwInterface::brakeReportCallback(const raptor_dbw_msgs::msg::BrakeReport::SharedPtr msg)
-{
-  actuation_status_data_.header.stamp = this->now();
-  actuation_status_data_.status.brake_status = msg->pedal_output;
-  brake_override_active_ = msg->driver_activity;
-
 }
 
 void RaptorDbwInterface::gearReportCallback(
@@ -281,3 +311,57 @@ void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscRepo
   control_mode_pub_->publish(out_control_mode);
 
 }
+
+// Additional Control Signals from Autoware
+void RaptorDbwInterface::gearCmdCallback(const autoware_vehicle_msgs::msg::GearCommand::SharedPtr msg)
+{
+
+  switch (msg->command) {
+    case autoware_vehicle_msgs::msg::GearCommand::DRIVE:
+      gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::DRIVE;
+      break;
+    case autoware_vehicle_msgs::msg::GearCommand::REVERSE:
+      gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::REVERSE;
+      break;
+    case autoware_vehicle_msgs::msg::GearCommand::NEUTRAL:
+      gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::NEUTRAL;
+      break;
+    case autoware_vehicle_msgs::msg::GearCommand::PARK:
+      gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::PARK;
+      break;
+    default:
+      return; 
+  }
+}
+
+void RaptorDbwInterface::turnCmdCallback(const autoware_vehicle_msgs::msg::TurnIndicatorsCommand::SharedPtr msg)
+{
+
+  switch (msg->command) {
+    case autoware_vehicle_msgs::msg::TurnIndicatorsCommand::ENABLE_LEFT:
+      misc_turn_cmd_.cmd.value = raptor_dbw_msgs::msg::TurnSignal::LEFT;
+      break;
+    case autoware_vehicle_msgs::msg::TurnIndicatorsCommand::ENABLE_RIGHT:
+      misc_turn_cmd_.cmd.value = raptor_dbw_msgs::msg::TurnSignal::RIGHT;
+      break;
+    default:
+      misc_turn_cmd_.cmd.value = raptor_dbw_msgs::msg::TurnSignal::NONE;
+      break;
+  }
+}
+
+void RaptorDbwInterface::hazardCmdCallback(
+    const autoware_vehicle_msgs::msg::HazardLightsCommand::SharedPtr msg)
+{
+  misc_hazard_cmd_.cmd.value =
+      (msg->command == autoware_vehicle_msgs::msg::HazardLightsCommand::ENABLE)
+          ? raptor_dbw_msgs::msg::TurnSignal::HAZARDS
+          : raptor_dbw_msgs::msg::TurnSignal::NONE;
+}
+
+void RaptorDbwInterface::engageCallback(const std_msgs::msg::Bool::SharedPtr msg)
+{
+  enable_cmd_.global_enable = msg->data;
+  global_enable_active_ = msg->data;
+}
+

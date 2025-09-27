@@ -2,9 +2,15 @@
 #define RAPTOR_DBW_INTERFACE__RAPTOR_DBW_INTERFACE_HPP_
 
 #include "rclcpp/rclcpp.hpp"
+#include <std_msgs/msg/bool.hpp>
 
 // Autoware Command messages
 #include "autoware_control_msgs/msg/control.hpp"
+#include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
+#include <autoware_vehicle_msgs/msg/gear_command.hpp>
+#include <autoware_vehicle_msgs/msg/turn_indicators_command.hpp>
+#include <autoware_vehicle_msgs/msg/hazard_lights_command.hpp>
+#include <autoware_vehicle_msgs/msg/engage.hpp>
 
 // Autoware Report messages
 #include "autoware_vehicle_msgs/msg/control_mode_report.hpp"
@@ -42,14 +48,23 @@ public:
 private:
 
   // Callback function for vehicle control 
-  void ackermannCmdCallback(const autoware_control_msgs::msg::Control::SharedPtr msg);
-  
-  // Actuatiın status timer 
-  tier4_vehicle_msgs::msg::ActuationStatusStamped actuation_status_data_;
-  rclcpp::TimerBase::SharedPtr actuation_timer_;
+  void ackermannCmdCallback (const autoware_control_msgs::msg::Control::SharedPtr msg);
+  void gearCmdCallback      (const autoware_vehicle_msgs::msg::GearCommand::SharedPtr msg);
+  void turnCmdCallback      (const autoware_vehicle_msgs::msg::TurnIndicatorsCommand::SharedPtr msg);
+  void hazardCmdCallback    (const autoware_vehicle_msgs::msg::HazardLightsCommand::SharedPtr msg);
+  void engageCallback       (const std_msgs::msg::Bool::SharedPtr msg);
+
+  // Actuation status timer 
+  tier4_vehicle_msgs::msg::ActuationStatusStamped   actuation_status_data_;
+  rclcpp::TimerBase::SharedPtr                      actuation_timer_;
 
   // Subscribers (from Autoware)
-  rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr           ackermann_sub_;
+  rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr               ackermann_sub_;
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::GearCommand>::SharedPtr           gear_cmd_sub_;
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::TurnIndicatorsCommand>::SharedPtr turn_cmd_sub_;
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::HazardLightsCommand>::SharedPtr   hazard_cmd_sub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr                               engage_sub_;
+
 
   // Publishers (to Autoware reports)
   rclcpp::Publisher<autoware_vehicle_msgs::msg::ControlModeReport>::SharedPtr    control_mode_pub_;
@@ -89,6 +104,13 @@ private:
 
   // Rolling Counter (this parameter is a common value for all published messages to Raptor DBW for each iteration)
   uint8_t counter_;
+
+  //  Additional Control Signals from Autoware
+  raptor_dbw_msgs::msg::GearCmd           gear_cmd_;
+  raptor_dbw_msgs::msg::MiscCmd           misc_cmd_;
+  raptor_dbw_msgs::msg::MiscCmd           misc_turn_cmd_;
+  raptor_dbw_msgs::msg::MiscCmd           misc_hazard_cmd_;
+  raptor_dbw_msgs::msg::GlobalEnableCmd   enable_cmd_;
 
   // Override flags
   bool brake_override_active_;
