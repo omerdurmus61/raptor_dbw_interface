@@ -73,13 +73,13 @@ private:
   rclcpp::Subscription<raptor_dbw_msgs::msg::MiscReport>::SharedPtr              misc_report_sub_;
 
   // Callback functions for DBW reports 
-  void steeringReportCallback(const raptor_dbw_msgs::msg::SteeringReport::SharedPtr msg);
-  void wheelSpeedReportCallback(const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg);
-  void accelReportCallback(const raptor_dbw_msgs::msg::AcceleratorPedalReport::SharedPtr msg);
-  void brakeReportCallback(const raptor_dbw_msgs::msg::BrakeReport::SharedPtr msg);
-  void gearReportCallback(const raptor_dbw_msgs::msg::GearReport::SharedPtr msg);
-  void driverInputReportCallback(const raptor_dbw_msgs::msg::DriverInputReport::SharedPtr msg);
-  void miscReportCallback(const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg);
+  void steeringReportCallback    (const raptor_dbw_msgs::msg::SteeringReport::SharedPtr msg);
+  void wheelSpeedReportCallback  (const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg);
+  void accelReportCallback       (const raptor_dbw_msgs::msg::AcceleratorPedalReport::SharedPtr msg);
+  void brakeReportCallback       (const raptor_dbw_msgs::msg::BrakeReport::SharedPtr msg);
+  void gearReportCallback        (const raptor_dbw_msgs::msg::GearReport::SharedPtr msg);
+  void driverInputReportCallback (const raptor_dbw_msgs::msg::DriverInputReport::SharedPtr msg);
+  void miscReportCallback        (const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg);
 
   // Rolling Counter (this parameter is a common value for all published messages to Raptor DBW for each iteration)
   uint8_t counter_;

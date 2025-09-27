@@ -4,21 +4,21 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 : Node("raptor_dbw_interface", options)
 {
   // Publishers (to Raptor DBW)
-  accel_pub_    = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
-  brake_pub_    = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>( "/raptor_dbw_interface/brake_cmd", 10);
-  steering_pub_ = this->create_publisher<raptor_dbw_msgs::msg::SteeringCmd>("/raptor_dbw_interface/steering_cmd", 10);
-  gear_pub_     = this->create_publisher<raptor_dbw_msgs::msg::GearCmd>("/raptor_dbw_interface/gear_cmd", 10);
-  enable_pub_   = this->create_publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>("/raptor_dbw_interface/global_enable_cmd", 10);
-  misc_pub_     = this->create_publisher<raptor_dbw_msgs::msg::MiscCmd>("/raptor_dbw_interface/misc_cmd", 10);
+  accel_pub_    = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>                ("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
+  brake_pub_    = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>                           ( "/raptor_dbw_interface/brake_cmd", 10);
+  steering_pub_ = this->create_publisher<raptor_dbw_msgs::msg::SteeringCmd>                        ("/raptor_dbw_interface/steering_cmd", 10);
+  gear_pub_     = this->create_publisher<raptor_dbw_msgs::msg::GearCmd>                            ("/raptor_dbw_interface/gear_cmd", 10);
+  enable_pub_   = this->create_publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>                    ("/raptor_dbw_interface/global_enable_cmd", 10);
+  misc_pub_     = this->create_publisher<raptor_dbw_msgs::msg::MiscCmd>                            ("/raptor_dbw_interface/misc_cmd", 10);
 
   // Publishers (to Autoware reports)
-  control_mode_pub_     = this->create_publisher<autoware_vehicle_msgs::msg::ControlModeReport>("/vehicle/status/control_mode", 10);
-  velocity_pub_         = this->create_publisher<autoware_vehicle_msgs::msg::VelocityReport>("/vehicle/status/velocity_status", 10);
-  steering_status_pub_  = this->create_publisher<autoware_vehicle_msgs::msg::SteeringReport>("/vehicle/status/steering_status", 10);
-  gear_status_pub_      = this->create_publisher<autoware_vehicle_msgs::msg::GearReport>("/vehicle/status/gear_status", 10);
-  turn_indicators_pub_  = this->create_publisher<autoware_vehicle_msgs::msg::TurnIndicatorsReport>("/vehicle/status/turn_indicators_status", 10);
-  hazard_lights_pub_    = this->create_publisher<autoware_vehicle_msgs::msg::HazardLightsReport>("/vehicle/status/hazard_lights_status", 10);
-  actuation_status_pub_ = this->create_publisher<tier4_vehicle_msgs::msg::ActuationStatusStamped>("/vehicle/status/actuation_status", 10);
+  control_mode_pub_     = this->create_publisher<autoware_vehicle_msgs::msg::ControlModeReport>    ("/vehicle/status/control_mode", 10);
+  velocity_pub_         = this->create_publisher<autoware_vehicle_msgs::msg::VelocityReport>       ("/vehicle/status/velocity_status", 10);
+  steering_status_pub_  = this->create_publisher<autoware_vehicle_msgs::msg::SteeringReport>       ("/vehicle/status/steering_status", 10);
+  gear_status_pub_      = this->create_publisher<autoware_vehicle_msgs::msg::GearReport>           ("/vehicle/status/gear_status", 10);
+  turn_indicators_pub_  = this->create_publisher<autoware_vehicle_msgs::msg::TurnIndicatorsReport> ("/vehicle/status/turn_indicators_status", 10);
+  hazard_lights_pub_    = this->create_publisher<autoware_vehicle_msgs::msg::HazardLightsReport>   ("/vehicle/status/hazard_lights_status", 10);
+  actuation_status_pub_ = this->create_publisher<tier4_vehicle_msgs::msg::ActuationStatusStamped>  ("/vehicle/status/actuation_status", 10);
 
   // Subscribers (from Autoware)
   ackermann_sub_ = this->create_subscription<autoware_control_msgs::msg::Control>(
@@ -123,9 +123,17 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::SteeringReport::SharedPtr msg)
 {
   autoware_vehicle_msgs::msg::SteeringReport out;
+  tier4_vehicle_msgs::msg::ActuationStatusStamped out_actuation_status;
+
   out.stamp = this->now();
+  out_actuation_status.header.stamp = this->now();
+
   out.steering_tire_angle = msg->steering_wheel_angle;  // unit conversion might be required
+  out_actuation_status.status.steer_status = msg->steering_wheel_angle;
+
   steering_status_pub_->publish(out);
+  actuation_status_pub_->publish(out_actuation_status);
+
 }
 
 void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg)
@@ -181,27 +189,47 @@ void RaptorDbwInterface::driverInputReportCallback(
   const raptor_dbw_msgs::msg::DriverInputReport::SharedPtr msg)
 {
   autoware_vehicle_msgs::msg::TurnIndicatorsReport out;
+  autoware_vehicle_msgs::msg::HazardLightsReport out_hazar_lights_report;
+
   out.stamp = this->now();
+  out_hazar_lights_report.stamp = this->now();
 
   switch (msg->turn_signal.value) {
     case raptor_dbw_msgs::msg::TurnSignal::LEFT:
       out.report = autoware_vehicle_msgs::msg::TurnIndicatorsReport::ENABLE_LEFT;
+      out_hazar_lights_report.report = autoware_vehicle_msgs::msg::HazardLightsReport::DISABLE;
       break;
     case raptor_dbw_msgs::msg::TurnSignal::RIGHT:
       out.report = autoware_vehicle_msgs::msg::TurnIndicatorsReport::ENABLE_RIGHT;
+      out_hazar_lights_report.report = autoware_vehicle_msgs::msg::HazardLightsReport::DISABLE;
+      break;
+    case raptor_dbw_msgs::msg::TurnSignal::HAZARDS:
+      out.report = autoware_vehicle_msgs::msg::TurnIndicatorsReport::DISABLE;
+      out_hazar_lights_report.report = autoware_vehicle_msgs::msg::HazardLightsReport::ENABLE;
       break;
     default:
       out.report = autoware_vehicle_msgs::msg::TurnIndicatorsReport::DISABLE;
+      out_hazar_lights_report.report = autoware_vehicle_msgs::msg::HazardLightsReport::DISABLE;
       break;
   }
 
   turn_indicators_pub_->publish(out);
+  hazard_lights_pub_->publish(out_hazar_lights_report);
 }
 
 void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg)
 {
   autoware_vehicle_msgs::msg::VelocityReport out;
+  autoware_vehicle_msgs::msg::ControlModeReport out_control_mode;
+
   out.header.stamp = this->now();
+  out_control_mode.stamp = this->now();
+
+  // The WheelSpeedReport topic might be used to calculate the average velocity of the wheels
   out.longitudinal_velocity = msg->vehicle_speed / 3.6; // DBW (km/h) -> Autoware (m/s)
+  out_control_mode.mode = autoware_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
+
   velocity_pub_->publish(out);
+  control_mode_pub_->publish(out_control_mode);
+
 }
