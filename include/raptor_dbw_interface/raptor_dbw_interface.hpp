@@ -89,9 +89,16 @@ private:
 
   // Rolling Counter (this parameter is a common value for all published messages to Raptor DBW for each iteration)
   uint8_t counter_;
-  
+
+  // Override flags
+  bool brake_override_active_;
+  bool accel_override_active_;
+  bool steering_override_active_;
+  bool global_enable_active_;
+
   // Vehicle parameters
   double steering_ratio_;  
+
 };
 
 #endif  // RAPTOR_DBW_INTERFACE__RAPTOR_DBW_INTERFACE_HPP_

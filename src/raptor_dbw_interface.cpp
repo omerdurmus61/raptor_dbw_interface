@@ -7,6 +7,12 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   // Vehicle Parameters
   steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);
 
+  // Override flags
+  brake_override_active_ = false;
+  accel_override_active_ = false;
+  steering_override_active_ = false;
+  global_enable_active_ = false;
+
   // Publishers (to Raptor DBW)
   accel_pub_    = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>                ("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
   brake_pub_    = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>                           ( "/raptor_dbw_interface/brake_cmd", 10);
@@ -122,6 +128,7 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   // Enable command 
   raptor_dbw_msgs::msg::GlobalEnableCmd enable_cmd;
   enable_cmd.global_enable = true;
+  global_enable_active_ = enable_cmd.global_enable;
   enable_cmd.rolling_counter = counter_;
   enable_pub_->publish(enable_cmd);
 }
@@ -141,30 +148,49 @@ void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::Stee
   out.stamp = this->now();
   actuation_status_data_.header.stamp = this->now();
 
-  out.steering_tire_angle = msg->steering_wheel_angle / steering_ratio_;  // (steering wheel -> tire angle)unit conversion might be required
+  // (steering wheel -> tire angle) unit conversion might be required
+  out.steering_tire_angle = msg->steering_wheel_angle / steering_ratio_;  
 
   actuation_status_data_.status.steer_status = msg->steering_wheel_angle;
 
   steering_status_pub_->publish(out);
 
+  steering_override_active_ = msg->driver_activity;
+
 }
 
 void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg)
 {
-  (void)msg;
   // odometry model might be used here
+
+  /*
+  // TO DO: The velocity_status can be calculated based on the velocity of each wheel 
+  autoware_vehicle_msgs::msg::VelocityReport out;
+  out.header.stamp = this->now();
+
+  // Average Velocity (m/s)
+  double avg_speed = (wheel_radius_ * (msg->front_left + msg->front_right +
+                                     msg->rear_left + msg->rear_right)) / 4.0;
+
+  out.longitudinal_velocity = avg_speed;
+
+  velocity_pub_->publish(out);
+  */
 }
 
 void RaptorDbwInterface::accelReportCallback(const raptor_dbw_msgs::msg::AcceleratorPedalReport::SharedPtr msg)
 {
   actuation_status_data_.header.stamp = this->now();
   actuation_status_data_.status.accel_status = msg->pedal_output;
+  accel_override_active_ = msg->driver_activity;
 }
 
 void RaptorDbwInterface::brakeReportCallback(const raptor_dbw_msgs::msg::BrakeReport::SharedPtr msg)
 {
   actuation_status_data_.header.stamp = this->now();
   actuation_status_data_.status.brake_status = msg->pedal_output;
+  brake_override_active_ = msg->driver_activity;
+
 }
 
 void RaptorDbwInterface::gearReportCallback(
@@ -228,18 +254,30 @@ void RaptorDbwInterface::driverInputReportCallback(
 }
 
 void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg)
-{
-  autoware_vehicle_msgs::msg::VelocityReport out;
-  autoware_vehicle_msgs::msg::ControlModeReport out_control_mode;
+{ 
 
+  // Velocity Report
+  autoware_vehicle_msgs::msg::VelocityReport out;
   out.header.stamp = this->now();
-  out_control_mode.stamp = this->now();
 
   // The WheelSpeedReport topic might be used to calculate the average velocity of the wheels
   out.longitudinal_velocity = msg->vehicle_speed / 3.6; // DBW (km/h) -> Autoware (m/s)
-  out_control_mode.mode = autoware_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
 
   velocity_pub_->publish(out);
+
+  // Control Mode Report 
+  autoware_vehicle_msgs::msg::ControlModeReport out_control_mode;
+  out_control_mode.stamp = this->now();
+
+  bool driver_override = accel_override_active_ ||
+                        brake_override_active_  ||
+                        steering_override_active_;
+
+  if (global_enable_active_ && !driver_override) {
+    out_control_mode.mode = autoware_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
+  } else {
+    out_control_mode.mode = autoware_vehicle_msgs::msg::ControlModeReport::MANUAL;
+  }
   control_mode_pub_->publish(out_control_mode);
 
 }
