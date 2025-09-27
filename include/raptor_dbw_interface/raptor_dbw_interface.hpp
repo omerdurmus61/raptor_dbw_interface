@@ -32,6 +32,7 @@
 #include "raptor_dbw_msgs/msg/driver_input_report.hpp"
 #include "raptor_dbw_msgs/msg/misc_report.hpp"
 
+using namespace std::chrono_literals;
 
 class RaptorDbwInterface : public rclcpp::Node
 {
@@ -42,6 +43,10 @@ private:
 
   // Callback function for vehicle control 
   void ackermannCmdCallback(const autoware_control_msgs::msg::Control::SharedPtr msg);
+  
+  // Actuatiın status timer 
+  tier4_vehicle_msgs::msg::ActuationStatusStamped actuation_status_data_;
+  rclcpp::TimerBase::SharedPtr actuation_timer_;
 
   // Subscribers (from Autoware)
   rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr           ackermann_sub_;
@@ -80,6 +85,7 @@ private:
   void gearReportCallback        (const raptor_dbw_msgs::msg::GearReport::SharedPtr msg);
   void driverInputReportCallback (const raptor_dbw_msgs::msg::DriverInputReport::SharedPtr msg);
   void miscReportCallback        (const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg);
+  void publishActuationStatusTimerCallback ();
 
   // Rolling Counter (this parameter is a common value for all published messages to Raptor DBW for each iteration)
   uint8_t counter_;

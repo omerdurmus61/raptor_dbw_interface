@@ -19,6 +19,9 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   turn_indicators_pub_  = this->create_publisher<autoware_vehicle_msgs::msg::TurnIndicatorsReport> ("/vehicle/status/turn_indicators_status", 10);
   hazard_lights_pub_    = this->create_publisher<autoware_vehicle_msgs::msg::HazardLightsReport>   ("/vehicle/status/hazard_lights_status", 10);
   actuation_status_pub_ = this->create_publisher<tier4_vehicle_msgs::msg::ActuationStatusStamped>  ("/vehicle/status/actuation_status", 10);
+  
+  // Actuatiın status timer  50Hz
+  actuation_timer_ = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishActuationStatusTimerCallback, this));
 
   // Subscribers (from Autoware)
   ackermann_sub_ = this->create_subscription<autoware_control_msgs::msg::Control>(
@@ -120,41 +123,44 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 }
 
 // === DBW → Autoware reports ===
+
+void RaptorDbwInterface::publishActuationStatusTimerCallback()
+{
+  actuation_status_pub_->publish(actuation_status_data_);
+}
+
+
 void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::SteeringReport::SharedPtr msg)
 {
   autoware_vehicle_msgs::msg::SteeringReport out;
-  tier4_vehicle_msgs::msg::ActuationStatusStamped out_actuation_status;
 
   out.stamp = this->now();
-  out_actuation_status.header.stamp = this->now();
+  actuation_status_data_.header.stamp = this->now();
 
   out.steering_tire_angle = msg->steering_wheel_angle;  // unit conversion might be required
-  out_actuation_status.status.steer_status = msg->steering_wheel_angle;
+
+  actuation_status_data_.status.steer_status = msg->steering_wheel_angle;
 
   steering_status_pub_->publish(out);
-  actuation_status_pub_->publish(out_actuation_status);
 
 }
 
 void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg)
 {
-    // odometry model might be used here
+  (void)msg;
+  // odometry model might be used here
 }
 
 void RaptorDbwInterface::accelReportCallback(const raptor_dbw_msgs::msg::AcceleratorPedalReport::SharedPtr msg)
 {
-  tier4_vehicle_msgs::msg::ActuationStatusStamped out;
-  out.header.stamp = this->now();
-  out.status.accel_status = msg->pedal_output;
-  actuation_status_pub_->publish(out);
+  actuation_status_data_.header.stamp = this->now();
+  actuation_status_data_.status.accel_status = msg->pedal_output;
 }
 
 void RaptorDbwInterface::brakeReportCallback(const raptor_dbw_msgs::msg::BrakeReport::SharedPtr msg)
 {
-  tier4_vehicle_msgs::msg::ActuationStatusStamped out;
-  out.header.stamp = this->now();
-  out.status.brake_status = msg->pedal_output;
-  actuation_status_pub_->publish(out);
+  actuation_status_data_.header.stamp = this->now();
+  actuation_status_data_.status.brake_status = msg->pedal_output;
 }
 
 void RaptorDbwInterface::gearReportCallback(
