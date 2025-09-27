@@ -2,7 +2,11 @@
 
 RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 : Node("raptor_dbw_interface", options)
-{
+{ 
+
+  // Vehicle Parameters
+  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);
+
   // Publishers (to Raptor DBW)
   accel_pub_    = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>                ("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
   brake_pub_    = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>                           ( "/raptor_dbw_interface/brake_cmd", 10);
@@ -137,7 +141,7 @@ void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::Stee
   out.stamp = this->now();
   actuation_status_data_.header.stamp = this->now();
 
-  out.steering_tire_angle = msg->steering_wheel_angle;  // unit conversion might be required
+  out.steering_tire_angle = msg->steering_wheel_angle / steering_ratio_;  // (steering wheel -> tire angle)unit conversion might be required
 
   actuation_status_data_.status.steer_status = msg->steering_wheel_angle;
 
