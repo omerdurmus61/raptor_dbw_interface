@@ -162,7 +162,7 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   // Steering command
   raptor_dbw_msgs::msg::SteeringCmd steer_cmd;
   // Autoware (tire angle) → DBW (steering wheel angle)
-  steer_cmd.angle_cmd = steering_tire_angle * steering_ratio_;  
+  steer_cmd.angle_cmd = steering_tire_angle * steering_ratio_ * 180.0 / M_PI;  
   steer_cmd.enable = true;
   steer_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   steer_cmd.rolling_counter = counter_;
@@ -201,7 +201,7 @@ void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::Stee
   out.stamp = this->now();
 
   // (steering wheel (deg) -> tire angle (rad)) unit conversion might be required
-  out.steering_tire_angle = msg->steering_wheel_angle / steering_ratio_;  
+  out.steering_tire_angle = (msg->steering_wheel_angle / steering_ratio_) * M_PI / 180.0;
 
   actuation_status_data_.status.steer_status = msg->steering_wheel_angle;
 
