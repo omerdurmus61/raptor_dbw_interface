@@ -5,10 +5,10 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 { 
 
   // Vehicle Parameters
-  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);
+  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 1.0);    // steering_wheel (deg) / tier angle (rad)
   max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
-  max_accel_      = this->declare_parameter<double>("max_accel_", 2.0);        // m/s^2
-  max_jerk_       = this->declare_parameter<double>("jerk_limit", 1.0);        // m/s^3  
+  max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
+  max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
 
   // Override flags
   brake_override_active_    = false;
@@ -37,6 +37,8 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   enable_cmd_ = raptor_dbw_msgs::msg::GlobalEnableCmd();
   enable_cmd_.global_enable = false;
   enable_cmd_.rolling_counter = 0; 
+
+  counter_ = 0;
 
   // Publishers (to Raptor DBW)
   accel_pub_    = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>                ("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
@@ -137,14 +139,16 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   raptor_dbw_msgs::msg::AcceleratorPedalCmd accel_cmd;
   accel_cmd.speed_cmd = velocity;
   accel_cmd.enable = true;
-  accel_cmd.rolling_counter = counter_;
   accel_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   accel_cmd.accel_limit                = max_accel_;  
-  accel_cmd.accel_positive_jerk_limit  = max_jerk_;   
+  accel_cmd.accel_positive_jerk_limit  = max_jerk_;  
+  accel_cmd.rolling_counter = counter_; 
   accel_pub_->publish(accel_cmd);
 
   // Brake command
   raptor_dbw_msgs::msg::BrakeCmd brake_cmd;
+  brake_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+
   if (accel < 0.0) {
     brake_cmd.pedal_cmd = std::clamp(std::abs(accel) / max_decel_, 0.0, 1.0);
     brake_cmd.enable = true;
@@ -160,6 +164,7 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   // Autoware (tire angle) → DBW (steering wheel angle)
   steer_cmd.angle_cmd = steering_tire_angle * steering_ratio_;  
   steer_cmd.enable = true;
+  steer_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   steer_cmd.rolling_counter = counter_;
   steering_pub_->publish(steer_cmd);
 
@@ -195,7 +200,7 @@ void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::Stee
 
   out.stamp = this->now();
 
-  // (steering wheel -> tire angle) unit conversion might be required
+  // (steering wheel (deg) -> tire angle (rad)) unit conversion might be required
   out.steering_tire_angle = msg->steering_wheel_angle / steering_ratio_;  
 
   actuation_status_data_.status.steer_status = msg->steering_wheel_angle;
