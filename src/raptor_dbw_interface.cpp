@@ -5,7 +5,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 { 
 
   // Vehicle Parameters
-  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 1.0);    // steering_wheel (deg) / tier angle (rad)
+  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);    // steering_wheel (deg) / tier angle (rad)
   max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
   max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
   max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
