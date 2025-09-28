@@ -14,7 +14,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   brake_override_active_    = false;
   accel_override_active_    = false;
   steering_override_active_ = false;
-  global_enable_active_     = false;
+  global_enable_active_     = true;
 
   //  Initial default values for Autoware command inputs (gear, misc, enable)
   gear_cmd_ = raptor_dbw_msgs::msg::GearCmd();
@@ -35,7 +35,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   misc_hazard_cmd_.rolling_counter = 0;
 
   enable_cmd_ = raptor_dbw_msgs::msg::GlobalEnableCmd();
-  enable_cmd_.global_enable = false;
+  enable_cmd_.global_enable = true;
   enable_cmd_.rolling_counter = 0; 
 
   counter_ = 0;
@@ -120,7 +120,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::Control::SharedPtr msg)
 
 {
-  // Extract data from Autoware command
+  // Extract data from Autoware control command
   double velocity = msg->longitudinal.velocity;
   double accel = msg->longitudinal.acceleration;
   double steering_tire_angle = msg->lateral.steering_tire_angle;
