@@ -6,6 +6,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 
   // Vehicle Parameters
   steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);
+  max_decel_      = this->declare_parameter<double>("max_decel", 5.0);
 
   // Override flags
   brake_override_active_    = false;
@@ -116,7 +117,7 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 
 {
   // Extract data from Autoware command
-  double speed = msg->longitudinal.velocity;
+  double velocity = msg->longitudinal.velocity;
   double accel = msg->longitudinal.acceleration;
   double steering_tire_angle = msg->lateral.steering_tire_angle;
 
@@ -132,15 +133,16 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 
   // Accelerator command 
   raptor_dbw_msgs::msg::AcceleratorPedalCmd accel_cmd;
-  accel_cmd.speed_cmd = speed;
+  accel_cmd.speed_cmd = velocity;
   accel_cmd.enable = true;
   accel_cmd.rolling_counter = counter_;
+  accel_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   accel_pub_->publish(accel_cmd);
 
   // Brake command
   raptor_dbw_msgs::msg::BrakeCmd brake_cmd;
   if (accel < 0.0) {
-    brake_cmd.pedal_cmd = std::min(std::abs(accel), 1.0);
+    brake_cmd.pedal_cmd = std::clamp(std::abs(accel) / max_decel_, 0.0, 1.0);
     brake_cmd.enable = true;
   } else {
     brake_cmd.pedal_cmd = 0.0;

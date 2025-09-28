@@ -120,6 +120,7 @@ private:
 
   // Vehicle parameters
   double steering_ratio_;  
+  double max_decel_;  
 
 };
 
