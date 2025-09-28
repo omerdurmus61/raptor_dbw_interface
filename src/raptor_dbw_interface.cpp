@@ -6,7 +6,9 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 
   // Vehicle Parameters
   steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);
-  max_decel_      = this->declare_parameter<double>("max_decel", 5.0);
+  max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
+  max_accel_      = this->declare_parameter<double>("max_accel_", 2.0);        // m/s^2
+  max_jerk_       = this->declare_parameter<double>("jerk_limit", 1.0);        // m/s^3  
 
   // Override flags
   brake_override_active_    = false;
@@ -137,6 +139,8 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   accel_cmd.enable = true;
   accel_cmd.rolling_counter = counter_;
   accel_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  accel_cmd.accel_limit                = max_accel_;  
+  accel_cmd.accel_positive_jerk_limit  = max_jerk_;   
   accel_pub_->publish(accel_cmd);
 
   // Brake command

@@ -121,7 +121,8 @@ private:
   // Vehicle parameters
   double steering_ratio_;  
   double max_decel_;  
-
+  double max_accel_;
+  double max_jerk_;
 };
 
 #endif  // RAPTOR_DBW_INTERFACE__RAPTOR_DBW_INTERFACE_HPP_
