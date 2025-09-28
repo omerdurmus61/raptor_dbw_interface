@@ -54,9 +54,14 @@ private:
   void hazardCmdCallback    (const autoware_vehicle_msgs::msg::HazardLightsCommand::SharedPtr msg);
   void engageCallback       (const std_msgs::msg::Bool::SharedPtr msg);
 
-  // Actuation status timer 
+  // Actuation status and Autoware control command timers 
   tier4_vehicle_msgs::msg::ActuationStatusStamped   actuation_status_data_;
   rclcpp::TimerBase::SharedPtr                      actuation_timer_;
+
+  raptor_dbw_msgs::msg::AcceleratorPedalCmd         accel_cmd_;
+  raptor_dbw_msgs::msg::BrakeCmd                    brake_cmd_;
+  raptor_dbw_msgs::msg::SteeringCmd                 steer_cmd_;
+  rclcpp::TimerBase::SharedPtr                      autoware_cmd_timer_;
 
   // Subscribers (from Autoware)
   rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr               ackermann_sub_;
@@ -100,7 +105,10 @@ private:
   void gearReportCallback        (const raptor_dbw_msgs::msg::GearReport::SharedPtr msg);
   void driverInputReportCallback (const raptor_dbw_msgs::msg::DriverInputReport::SharedPtr msg);
   void miscReportCallback        (const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg);
+
+  // Timer callback functions for actuation status and control commands
   void publishActuationStatusTimerCallback ();
+  void publishAutowareControlCmdTimerCallback ();
 
   // Rolling Counter (this parameter is a common value for all published messages to Raptor DBW for each iteration)
   uint8_t counter_;

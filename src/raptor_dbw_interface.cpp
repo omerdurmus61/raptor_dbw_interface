@@ -5,7 +5,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 { 
 
   // Vehicle Parameters
-  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);    // steering_wheel (deg) / tier angle (rad)
+  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);   // steering_wheel (deg) / tier angle (rad)
   max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
   max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
   max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
@@ -16,12 +16,25 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   steering_override_active_ = false;
   global_enable_active_     = true;
 
-  //  Initial default values for Autoware command inputs (gear, misc, enable)
+  // Initial default values for Autoware command inputs (accel, brake, steer, gear, misc, and enable)
+  // Acceleration command default values
+  accel_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  accel_cmd_.accel_limit                = max_accel_;
+  accel_cmd_.accel_positive_jerk_limit  = max_jerk_;
+
+  // Brake command default values
+  brake_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+
+  // Steering command default values
+  steer_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+
+  // Gear command default values
   gear_cmd_ = raptor_dbw_msgs::msg::GearCmd();
   gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::PARK;
   gear_cmd_.enable = false;
   gear_cmd_.rolling_counter = 0;
 
+  // Misc command default values
   misc_merged_cmd_ = raptor_dbw_msgs::msg::MiscCmd();
   misc_merged_cmd_.cmd.value = raptor_dbw_msgs::msg::TurnSignal::NONE;
   misc_merged_cmd_.rolling_counter = 0;
@@ -34,6 +47,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   misc_hazard_cmd_.cmd.value = raptor_dbw_msgs::msg::TurnSignal::NONE;
   misc_hazard_cmd_.rolling_counter = 0;
 
+  // Enable command default values
   enable_cmd_ = raptor_dbw_msgs::msg::GlobalEnableCmd();
   enable_cmd_.global_enable = true;
   enable_cmd_.rolling_counter = 0; 
@@ -57,8 +71,9 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   hazard_lights_pub_    = this->create_publisher<autoware_vehicle_msgs::msg::HazardLightsReport>   ("/vehicle/status/hazard_lights_status", 10);
   actuation_status_pub_ = this->create_publisher<tier4_vehicle_msgs::msg::ActuationStatusStamped>  ("/vehicle/status/actuation_status", 10);
   
-  // Actuatiın status timer  50Hz
-  actuation_timer_ = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishActuationStatusTimerCallback, this));
+  // Actuation status and Autoware command timers  50Hz
+  actuation_timer_    = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishActuationStatusTimerCallback, this));
+  autoware_cmd_timer_ = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishAutowareControlCmdTimerCallback, this));
 
   // Subscribers (from Autoware)
   ackermann_sub_ = this->create_subscription<autoware_control_msgs::msg::Control>(
@@ -121,67 +136,29 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 
 {
   // Extract data from Autoware control command
-  double velocity = msg->longitudinal.velocity;
-  double accel = msg->longitudinal.acceleration;
-  double steering_tire_angle = msg->lateral.steering_tire_angle;
-
-  // Watchdog counter
-  counter_++;
-  if (counter_ > 15) {
-    counter_ = 0;
-  }
-
-  gear_cmd_.rolling_counter        = counter_;
-  misc_merged_cmd_.rolling_counter = counter_;
-  enable_cmd_.rolling_counter      = counter_;
-
   // Accelerator command 
-  raptor_dbw_msgs::msg::AcceleratorPedalCmd accel_cmd;
-  accel_cmd.speed_cmd = velocity;
-  accel_cmd.enable = true;
-  accel_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
-  accel_cmd.accel_limit                = max_accel_;  
-  accel_cmd.accel_positive_jerk_limit  = max_jerk_;  
-  accel_cmd.rolling_counter = counter_; 
-  accel_pub_->publish(accel_cmd);
+  accel_cmd_.speed_cmd                  = msg->longitudinal.velocity;
+  accel_cmd_.enable                     = true;
+  accel_cmd_.accel_limit                = max_accel_;  
+  accel_cmd_.accel_positive_jerk_limit  = max_jerk_;  
+  accel_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
 
   // Brake command
-  raptor_dbw_msgs::msg::BrakeCmd brake_cmd;
-  brake_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  brake_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
 
-  if (accel < 0.0) {
-    brake_cmd.pedal_cmd = std::clamp(std::abs(accel) / max_decel_, 0.0, 100.0);
-    brake_cmd.enable = true;
+  if (msg->longitudinal.acceleration < 0.0) {
+    brake_cmd_.pedal_cmd = std::clamp(std::abs(msg->longitudinal.acceleration) / max_decel_, 0.0, 100.0);
+    brake_cmd_.enable    = true;
   } else {
-    brake_cmd.pedal_cmd = 0.0;
-    brake_cmd.enable = false;
+    brake_cmd_.pedal_cmd = 0.0;
+    brake_cmd_.enable    = false;
   }
-  brake_cmd.rolling_counter = counter_;
-  brake_pub_->publish(brake_cmd);
 
   // Steering command
-  raptor_dbw_msgs::msg::SteeringCmd steer_cmd;
   // Autoware (tire angle) → DBW (steering wheel angle)
-  steer_cmd.angle_cmd = steering_tire_angle * steering_ratio_ * 180.0 / M_PI;  
-  steer_cmd.enable = true;
-  steer_cmd.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
-  steer_cmd.rolling_counter = counter_;
-  steering_pub_->publish(steer_cmd);
-
-  // Gear command (default DRIVE)
-  gear_pub_->publish(gear_cmd_);
-
-  // Turn signals and Hazard Lights
-  misc_merged_cmd_.cmd.value =
-  (misc_hazard_cmd_.cmd.value == raptor_dbw_msgs::msg::TurnSignal::HAZARDS)
-    ? raptor_dbw_msgs::msg::TurnSignal::HAZARDS
-    : misc_turn_cmd_.cmd.value;
-
-  misc_pub_->publish(misc_merged_cmd_);
-
-  // Enable command 
-  enable_pub_->publish(enable_cmd_);
-  //global_enable_active_ = true;
+  steer_cmd_.angle_cmd          = msg->lateral.steering_tire_angle * steering_ratio_ * 180.0 / M_PI;
+  steer_cmd_.enable             = true;
+  steer_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
 
 }
 
@@ -193,6 +170,42 @@ void RaptorDbwInterface::publishActuationStatusTimerCallback()
   actuation_status_pub_->publish(actuation_status_data_);
 }
 
+void RaptorDbwInterface::publishAutowareControlCmdTimerCallback ()
+{
+ // Watchdog counter
+  counter_++;
+  if (counter_ > 15) {
+    counter_ = 0;
+  }
+
+  // Update rolling_counter for all commands
+  accel_cmd_.rolling_counter       = counter_;
+  brake_cmd_.rolling_counter       = counter_;
+  steer_cmd_.rolling_counter       = counter_;
+  gear_cmd_.rolling_counter        = counter_;
+  misc_merged_cmd_.rolling_counter = counter_;
+  enable_cmd_.rolling_counter      = counter_;
+
+  // Publish Vehicle control commands
+  accel_pub_->publish(accel_cmd_);
+  brake_pub_->publish(brake_cmd_);
+  steering_pub_->publish(steer_cmd_);
+
+  // Publish Gear command (default DRIVE)
+  gear_pub_->publish(gear_cmd_);
+
+  // Publish Turn signals and Hazard Lights
+  misc_merged_cmd_.cmd.value =
+  (misc_hazard_cmd_.cmd.value == raptor_dbw_msgs::msg::TurnSignal::HAZARDS)
+    ? raptor_dbw_msgs::msg::TurnSignal::HAZARDS
+    : misc_turn_cmd_.cmd.value;
+
+  misc_pub_->publish(misc_merged_cmd_);
+
+  // Publish Enable command 
+  enable_pub_->publish(enable_cmd_);
+
+}
 
 void RaptorDbwInterface::steeringReportCallback(const raptor_dbw_msgs::msg::SteeringReport::SharedPtr msg)
 {
