@@ -47,7 +47,7 @@ public:
 
 private:
 
-  // Callback function for vehicle control 
+  // Callback functions for vehicle control 
   void ackermannCmdCallback (const autoware_control_msgs::msg::Control::SharedPtr msg);
   void gearCmdCallback      (const autoware_vehicle_msgs::msg::GearCommand::SharedPtr msg);
   void turnCmdCallback      (const autoware_vehicle_msgs::msg::TurnIndicatorsCommand::SharedPtr msg);
@@ -107,7 +107,7 @@ private:
 
   //  Additional Control Signals from Autoware
   raptor_dbw_msgs::msg::GearCmd           gear_cmd_;
-  raptor_dbw_msgs::msg::MiscCmd           misc_cmd_;
+  raptor_dbw_msgs::msg::MiscCmd           misc_merged_cmd_;
   raptor_dbw_msgs::msg::MiscCmd           misc_turn_cmd_;
   raptor_dbw_msgs::msg::MiscCmd           misc_hazard_cmd_;
   raptor_dbw_msgs::msg::GlobalEnableCmd   enable_cmd_;
