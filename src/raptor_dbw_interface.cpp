@@ -73,7 +73,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   
   // Actuation status and Autoware command timers  50Hz
   actuation_timer_    = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishActuationStatusTimerCallback, this));
-  autoware_cmd_timer_ = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishAutowareControlCmdTimerCallback, this));
+  autoware_cmd_timer_ = this->create_wall_timer(200ms,std::bind(&RaptorDbwInterface::publishAutowareControlCmdTimerCallback, this));
 
   // Subscribers (from Autoware)
   ackermann_sub_ = this->create_subscription<autoware_control_msgs::msg::Control>(
