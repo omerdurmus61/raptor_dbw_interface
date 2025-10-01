@@ -80,47 +80,112 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/vehicle/status/hazard_lights_status`   | autoware_vehicle_msgs::msg::HazardLightsReport     | hazard lights status                                 |
   | `/vehicle/status/actuation_status`       | autoware_vehicle_msgs::msg::ActuationStatusStamped | actuation (accel/brake pedal, steering wheel) status |
 
-
-
-
 ---
-##    Development Path
+
+## Development Path
 ## 🔹 Autoware → DBW
 
 ### Timers
 
-* [x] **actuation\_timer\_** → Publishs: `/vehicle/status/actuation_status`
+* [x] **actuation_timer_** → Publishes: `/vehicle/status/actuation_status`  
   Callback: `publishActuationStatusTimerCallback`
 
-* [x] **autoware\_cmd_timer\_** → Publishs: `accel, brake, steering, gear, misc, and enable commands`
+* [x] **autoware_cmd_timer_** → Publishes: `accel, brake, steering, gear, misc, and enable commands`  
   Callback: `publishAutowareControlCmdTimerCallback`
 
 ### Subscribers
 
-* [x] **ackermann\_sub\_** → listens: `/control/command/control_cmd`
+* [x] **ackermann_sub_** → listens: `/control/command/control_cmd`  
   Callback: `ackermannCmdCallback`
+
+* [x] **gear_cmd_sub_** → listens: `/control/command/gear_cmd`  
+  Callback: `gearCmdCallback`
+
+* [x] **turn_cmd_sub_** → listens: `/control/command/turn_indicators_cmd`  
+  Callback: `turnCmdCallback`
+
+* [x] **hazard_cmd_sub_** → listens: `/control/command/hazard_lights_cmd`  
+  Callback: `hazardCmdCallback`
+
+* [x] **engage_sub_** → listens: `/vehicle/engage`  
+  Callback: `engageCallback`
 
 ### Publishers
 
-* [x] **accel\_pub\_** → `/raptor_dbw_interface/accelerator_pedal_cmd`
-  Used in: `publishAutowareControlCmdTimerCallback`
+* [x] **accel_pub_** → `/raptor_dbw_interface/accelerator_pedal_cmd`  
+  Used in: `publishAutowareControlCmdTimerCallback`, `ackermannCmdCallback`
 
-* [x] **brake\_pub\_** → `/raptor_dbw_interface/brake_cmd`
-  Used in: `publishAutowareControlCmdTimerCallback`
+* [x] **brake_pub_** → `/raptor_dbw_interface/brake_cmd`  
+  Used in: `publishAutowareControlCmdTimerCallback`, `ackermannCmdCallback`
 
-* [x] **steering\_pub\_** → `/raptor_dbw_interface/steering_cmd`
-  Used in: `publishAutowareControlCmdTimerCallback`
+* [x] **steering_pub_** → `/raptor_dbw_interface/steering_cmd`  
+  Used in: `publishAutowareControlCmdTimerCallback`, `ackermannCmdCallback`
 
-* [x] **gear\_pub\_** → `/raptor_dbw_interface/gear_cmd`
-  Used in: `publishAutowareControlCmdTimerCallback`
+* [x] **gear_pub_** → `/raptor_dbw_interface/gear_cmd`  
+  Used in: `publishAutowareControlCmdTimerCallback`, `gearCmdCallback`
 
-* [x] **enable\_pub\_** → `/raptor_dbw_interface/global_enable_cmd`
-  Used in: `publishAutowareControlCmdTimerCallback`
+* [x] **enable_pub_** → `/raptor_dbw_interface/global_enable_cmd`  
+  Used in: `publishAutowareControlCmdTimerCallback`, `engageCallback`
 
-* [x] **misc\_pub\_** → `/raptor_dbw_interface/gmisc_cmd`
-  Used in: `publishAutowareControlCmdTimerCallback`
+* [x] **misc_pub_** → `/raptor_dbw_interface/misc_cmd`  
+  Used in: `publishAutowareControlCmdTimerCallback`, `turnCmdCallback`, `hazardCmdCallback`
 
 ---
+
+## 🔹 DBW → Autoware
+
+### Subscribers
+
+* [x] **steering_report_sub_** → listens: `/raptor_dbw_interface/steering_report`  
+  Callback: `steeringReportCallback`
+
+* [x] **accel_report_sub_** → listens: `/raptor_dbw_interface/accelerator_pedal_report`  
+  Callback: `accelReportCallback`
+
+* [x] **brake_report_sub_** → listens: `/raptor_dbw_interface/brake_report`  
+  Callback: `brakeReportCallback`
+
+* [x] **wheel_speed_report_sub_** → listens: `/raptor_dbw_interface/wheel_speed_report`  
+  Callback: `wheelSpeedReportCallback`
+
+* [x] **gear_report_sub_** → listens: `/raptor_dbw_interface/gear_report`  
+  Callback: `gearReportCallback`
+
+* [x] **driver_input_report_sub_** → listens: `/raptor_dbw_interface/driver_input_report`  
+  Callback: `driverInputReportCallback`
+
+* [x] **misc_report_sub_** → listens: `/raptor_dbw_interface/misc_report`  
+  Callback: `miscReportCallback`
+
+### Publishers
+
+* [x] **steering_status_pub_** → `/vehicle/status/steering_status`  
+  Published in: `steeringReportCallback`
+
+* [x] **velocity_pub_** → `/vehicle/status/velocity_status`  
+  Published in: `miscReportCallback`
+
+* [x] **control_mode_pub_** → `/vehicle/status/control_mode`  
+  Published in: `miscReportCallback`
+
+* [x] **gear_status_pub_** → `/vehicle/status/gear_status`  
+  Published in: `gearReportCallback`
+
+* [x] **turn_indicators_pub_** → `/vehicle/status/turn_indicators_status`  
+  Published in: `driverInputReportCallback`
+
+* [x] **hazard_lights_pub_** → `/vehicle/status/hazard_lights_status`  
+  Published in: `driverInputReportCallback`
+
+* [x] **actuation_status_pub_** → `/vehicle/status/actuation_status`  
+  Published in: `publishActuationStatusTimerCallback`, updated in: `accelReportCallback`, `brakeReportCallback`, `steeringReportCallback`
+
+---
+
+## 🔹 Summary
+
+* **Subscribers (12)** → each has a dedicated callback  
+* **Publishers (11)** → triggered inside corresponding callbacks/timers  
 
 **Execution flow:**  
 
@@ -137,6 +202,3 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 * `publishAutowareControlCmdTimerCallback` → accel, brake, steering, gear, misc, enable | publish all control commands periodically
 
 ---
-
-
-
