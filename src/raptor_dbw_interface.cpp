@@ -276,6 +276,9 @@ void RaptorDbwInterface::gearReportCallback(
     case raptor_dbw_msgs::msg::Gear::PARK:
       out.report = autoware_vehicle_msgs::msg::GearReport::PARK;
       break;
+    case raptor_dbw_msgs::msg::Gear::NONE:
+      out.report = autoware_vehicle_msgs::msg::GearReport::NONE;
+      break;
     default:
       out.report = autoware_vehicle_msgs::msg::GearReport::NONE;
       break;
@@ -362,6 +365,9 @@ void RaptorDbwInterface::gearCmdCallback(const autoware_vehicle_msgs::msg::GearC
       break;
     case autoware_vehicle_msgs::msg::GearCommand::PARK:
       gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::PARK;
+      break;
+    case autoware_vehicle_msgs::msg::GearCommand::NONE:
+      gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::NONE;
       break;
     default:
       gear_cmd_.enable = false;
