@@ -12,8 +12,8 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/control/command/gear_cmd`                      | `/raptor_dbw_interface/gear_cmd`                  | gear command                                                            |
   | `/control/command/turn_indicators_cmd`           | `/raptor_dbw_interface/misc_cmd`                  | turn indicators command                                                 |
   | `/control/command/hazard_lights_cmd`             | `/raptor_dbw_interface/misc_cmd`                  | hazard lights command                                                   |
-  | `/vehicle/engage`                                |                                                   | engage command                                                          |
-  | `/control/command/emergency_cmd`                 |                                                   | emergency command                                                       |
+  | `/vehicle/engage`                                | `/raptor_dbw_interface/global_enable_cmd`         | engage command                                                          |
+  | `/control/command/emergency_cmd`                 | `/raptor_dbw_interface/accelerator_pedal_cmd`     | `/raptor_dbw_interface/brake_cmd`&`/raptor_dbw_interface/steering_cmd`  |
   
   | Subscribed Topic from DBW                        | Published Topic via Autoware                      | Second Topic (accel & brake pedal etc.) or notes                        |
   | -------------------------------------------------| ------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -23,7 +23,8 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/raptor_dbw_interface/brake_report`             | `/vehicle/status/actuation_status`  	             | current brake pedal                                                     |
   | `/raptor_dbw_interface/gear_report`              | `/vehicle/status/gear_status`                     | current gear status                                                     |
   | `/raptor_dbw_interface/driver_input_report`      | `/vehicle/status/turn_indicators_status`          | current turn indicators status                                          |
-  | `/raptor_dbw_interface/misc_report`              |                                                   | current status of other parameters (e.g. override_active, can_time_out) |
+  | `/raptor_dbw_interface/driver_input_report`      | '`/vehicle/status/hazard_lights_status`'          | current hazard lights status                                            |
+  | `/raptor_dbw_interface/misc_report`              | `/vehicle/status/velocity_status`                 | current velocity of the vehicle                                         |
 
 
 ## Input / Output Topics and Their Message Types
@@ -52,7 +53,7 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
   | `/raptor_dbw_interface/brake_report`             | raptor_dbw_msgs::msg::BrakeReport            | current brake pedal                                                     |
   | `/raptor_dbw_interface/gear_report`              | raptor_dbw_msgs::msg::GearReport             | current gear status                                                     |
   | `/raptor_dbw_interface/driver_input_report`      | raptor_dbw_msgs::msg::DriverInputReport      | current turn indicators status                                          |
-  | `/raptor_dbw_interface/misc_report`              | raptor_dbw_msgs::msg::MiscReport             | current status of other parameters (e.g. override_active, can_time_out) |
+  | `/raptor_dbw_interface/misc_report`              | raptor_dbw_msgs::msg::MiscReport             | current velocity of the vehicle                                         |
 
 ### Output Topics
 
@@ -60,19 +61,19 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 
   | Name                                          | Type                                      | Description                                           |
   | ----------------------------------------------| ------------------------------------------| ----------------------------------------------------- |
-  | `/raptor_dbw_interface/accelerator_pedal_cmd` | raptor_dbw_msgs::msg::AcceleratorPedalCmd | accel pedal command                                   |
-  | `/raptor_dbw_interface/brake_cmd`             | raptor_dbw_msgs::msg::BrakeCmd            | brake pedal command                                   |
+  | `/raptor_dbw_interface/accelerator_pedal_cmd` | raptor_dbw_msgs::msg::AcceleratorPedalCmd | accel pedal command (position or vehicle speed        |
+  | `/raptor_dbw_interface/brake_cmd`             | raptor_dbw_msgs::msg::BrakeCmd            | brake pedal command (position)                        |
   | `/raptor_dbw_interface/steering_cmd`          | raptor_dbw_msgs::msg::SteeringCmd         | steering wheel angle and angular velocity command     |
   | `/raptor_dbw_interface/gear_cmd`              | raptor_dbw_msgs::msg::GearCmd             | gear command                                          |
-  | `/raptor_dbw_interface/misc_cmd`              | raptor_dbw_msgs::msg::MiscCmd             | turn indicators command                               |
+  | `/raptor_dbw_interface/misc_cmd`              | raptor_dbw_msgs::msg::MiscCmd             | turn indicators and hazard lights command             |
 
 
 - To Autoware
 
   | Name                                     | Type                                               | Description                                          |
   | ---------------------------------------- | -------------------------------------------------- | ---------------------------------------------------- |
-  | `/vehicle/status/control_mode`           | autoware_vehicle_msgs::msg::ControlModeReport      | control mode                                         |
-  | `/vehicle/status/velocity_status`        | autoware_vehicle_msgs::msg::VelocityReport         | velocity                                             |
+  | `/vehicle/status/control_mode`           | autoware_vehicle_msgs::msg::ControlModeReport      | control mode (Autonomous or Manual)                  |
+  | `/vehicle/status/velocity_status`        | autoware_vehicle_msgs::msg::VelocityReport         | current velocity of the vehicle                      |
   | `/vehicle/status/steering_status`        | autoware_vehicle_msgs::msg::SteeringReport         | steering wheel angle                                 |
   | `/vehicle/status/gear_status`            | autoware_vehicle_msgs::msg::GearReport             | gear status                                          |
   | `/vehicle/status/turn_indicators_status` | autoware_vehicle_msgs::msg::TurnIndicatorsReport   | turn indicators status                               |
@@ -86,6 +87,14 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 ##    Development Path
 ## 🔹 Autoware → DBW
 
+### Timers
+
+* [x] **actuation\_timer\_** → Publishs: `/vehicle/status/actuation_status`
+  Callback: `publishActuationStatusTimerCallback`
+
+* [x] **autoware\_cmd_timer\_** → Publishs: `accel, brake, steering, gear, misc, and enable commands`
+  Callback: `publishAutowareControlCmdTimerCallback`
+
 ### Subscribers
 
 * [x] **ackermann\_sub\_** → listens: `/control/command/control_cmd`
@@ -94,75 +103,38 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 ### Publishers
 
 * [x] **accel\_pub\_** → `/raptor_dbw_interface/accelerator_pedal_cmd`
-  Used in: `ackermannCmdCallback`
+  Used in: `publishAutowareControlCmdTimerCallback`
 
 * [x] **brake\_pub\_** → `/raptor_dbw_interface/brake_cmd`
-  Used in: `ackermannCmdCallback`
+  Used in: `publishAutowareControlCmdTimerCallback`
 
 * [x] **steering\_pub\_** → `/raptor_dbw_interface/steering_cmd`
-  Used in: `ackermannCmdCallback`
+  Used in: `publishAutowareControlCmdTimerCallback`
 
 * [x] **gear\_pub\_** → `/raptor_dbw_interface/gear_cmd`
-  Used in: `ackermannCmdCallback`
+  Used in: `publishAutowareControlCmdTimerCallback`
 
 * [x] **enable\_pub\_** → `/raptor_dbw_interface/global_enable_cmd`
-  Used in: `ackermannCmdCallback`
+  Used in: `publishAutowareControlCmdTimerCallback`
+
+* [x] **misc\_pub\_** → `/raptor_dbw_interface/gmisc_cmd`
+  Used in: `publishAutowareControlCmdTimerCallback`
 
 ---
 
-## 🔹 DBW → Autoware
+**Execution flow:**  
 
-### Subscribers
-
-* [ ] **steering\_report\_sub\_** → listens: `/raptor_dbw_interface/steering_report`
-  Callback: `steeringReportCallback`
-
-* [ ] **brake\_report\_sub\_** → listens: `/raptor_dbw_interface/brake_report`
-  Callback: `brakeReportCallback`
-
-* [ ] **wheel\_speed\_report\_sub\_** → listens: `/raptor_dbw_interface/wheel_speed_report`
-  Callback: `wheelSpeedReportCallback`
-
-* [ ] **gear\_report\_sub\_** → listens: `/raptor_dbw_interface/gear_report`
-  Callback: `gearReportCallback`
-
-* [ ] **misc\_report\_sub\_** → listens: `/raptor_dbw_interface/misc_report`
-  Callback: `miscReportCallback`
-
-### Publishers
-
-* [ ] **steering\_status\_pub\_** → `/vehicle/status/steering_status`
-  Published in: `steeringReportCallback`
-
-* [ ] **velocity\_status\_pub\_** → `/vehicle/status/velocity_status`
-  Published in: `wheelSpeedReportCallback`
-
-* [ ] **control\_mode\_pub\_** → `/vehicle/status/control_mode`
-  Published in: `miscReportCallback`
-
-* [ ] **gear\_status\_pub\_** → `/vehicle/status/gear_status`
-  Published in: `gearReportCallback`
-
-* [ ] **turn\_indicators\_pub\_** → `/vehicle/status/turn_indicators_status`
-  Published in: `miscReportCallback`
-
-* [ ] **hazard\_lights\_pub\_** → `/vehicle/status/hazard_lights_status`
-  Published in: `miscReportCallback`
-
----
-
-## 🔹 Summary
-
-* **Subscribers (6)** → each has a dedicated callback
-* **Publishers (11)** → triggered inside the corresponding callbacks
-
-👉 Execution flow:
-
-* `ackermannCmdCallback` → triggers 5 publishers ✅
-* `steeringReportCallback` → triggers 1 publisher ⬜
-* `wheelSpeedReportCallback` → triggers 1 publisher ⬜
-* `gearReportCallback` → triggers 1 publisher ⬜
-* `miscReportCallback` → triggers 3 publishers ⬜
+* `ackermannCmdCallback` → accel, brake, steering | fill messages (from control_cmd)  
+* `gearCmdCallback` → gear | fill message (from gear_cmd)  
+* `turnCmdCallback` + `hazardCmdCallback` → misc | fill messages (from turn/hazard commands)  
+* `engageCallback` → enable | fill message (from engage flag)  
+* `steeringReportCallback` → steering_status, actuation_status (steer) | publish steering_status, update actuation_status  
+* `accelReportCallback` → actuation_status (accel) | update actuation_status only  
+* `brakeReportCallback` → actuation_status (brake) | update actuation_status only  
+* `driverInputReportCallback` → turn_indicators, hazard_lights | publish turn/hazard reports  
+* `miscReportCallback` → velocity, control_mode | publish velocity & control_mode  
+* `publishActuationStatusTimerCallback` → actuation_status | publish periodically (actuation status)  
+* `publishAutowareControlCmdTimerCallback` → accel, brake, steering, gear, misc, enable | publish all control commands periodically
 
 ---
 
