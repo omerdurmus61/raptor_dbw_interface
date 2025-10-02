@@ -202,3 +202,17 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 * `publishAutowareControlCmdTimerCallback` → accel, brake, steering, gear, misc, enable | publish all control commands periodically
 
 ---
+
+## 🔹 TO DO List
+
+- [ ] Local odometry data can be provided using encoder values. DBW already publishes wheel speed and wheel position on the following topics:
+
+- [ ] /raptor_dbw_interface/wheel_speed_report & /raptor_dbw_interface/wheel_position_report
+
+- [ ] Velocity status should be derived from the average velocity of all wheels, using the /raptor_dbw_interface/wheel_speed_report topic.
+
+- [ ] Control mode status is currently published inside the misc callback. This logic should be moved into the enable callback for better structure.
+
+- [ ] The vehicle interface package currently supports velocity-reference-based driving; integrate it to also support pedal-position-based reference from Autoware.
+
+---
