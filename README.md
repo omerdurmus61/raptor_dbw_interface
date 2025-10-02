@@ -206,8 +206,7 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 ## 🔹 TO DO List
 
 - [ ] Local odometry data can be provided using encoder values. DBW already publishes wheel speed and wheel position on the following topics:
-
-- [ ] /raptor_dbw_interface/wheel_speed_report & /raptor_dbw_interface/wheel_position_report
+/raptor_dbw_interface/wheel_speed_report & /raptor_dbw_interface/wheel_position_report
 
 - [ ] Velocity status should be derived from the average velocity of all wheels, using the /raptor_dbw_interface/wheel_speed_report topic.
 
