@@ -152,8 +152,8 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   brake_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   brake_cmd_.enable    = true;
 
-  if (msg->longitudinal.acceleration < 0.0) {
-    brake_cmd_.pedal_cmd = std::clamp(std::abs(msg->longitudinal.acceleration) / max_decel_, 0.0, 100.0);
+  if (msg->longitudinal.velocity <= 0.0) {
+    brake_cmd_.pedal_cmd = 100.0;
   } else {
     brake_cmd_.pedal_cmd = 0.0;
   }
