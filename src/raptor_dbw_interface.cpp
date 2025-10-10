@@ -21,17 +21,20 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   accel_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   accel_cmd_.accel_limit                = max_accel_;
   accel_cmd_.accel_positive_jerk_limit  = max_jerk_;
+  accel_cmd_.enable                     = true;
 
   // Brake command default values
   brake_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  brake_cmd_.enable                     = true;
 
   // Steering command default values
   steer_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  steer_cmd_.enable                     = true;
 
   // Gear command default values
   gear_cmd_ = raptor_dbw_msgs::msg::GearCmd();
   gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::PARK;
-  gear_cmd_.enable = false;
+  gear_cmd_.enable = true;
   gear_cmd_.rolling_counter = 0;
 
   // Misc command default values
@@ -145,13 +148,12 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 
   // Brake command
   brake_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  brake_cmd_.enable    = true;
 
   if (msg->longitudinal.acceleration < 0.0) {
     brake_cmd_.pedal_cmd = std::clamp(std::abs(msg->longitudinal.acceleration) / max_decel_, 0.0, 100.0);
-    brake_cmd_.enable    = true;
   } else {
     brake_cmd_.pedal_cmd = 0.0;
-    brake_cmd_.enable    = false;
   }
 
   // Steering command
@@ -370,7 +372,7 @@ void RaptorDbwInterface::gearCmdCallback(const autoware_vehicle_msgs::msg::GearC
       gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::NONE;
       break;
     default:
-      gear_cmd_.enable = false;
+      gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::NONE;
       return; 
   }
   gear_cmd_.enable = true;
