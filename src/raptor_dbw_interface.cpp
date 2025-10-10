@@ -5,7 +5,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 { 
 
   // Vehicle Parameters
-  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.0);   // steering_wheel (deg) / tier angle (rad)
+  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.2);   // steering_wheel (deg) / tier angle (rad)
   max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
   max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
   max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
@@ -35,7 +35,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 
   // Gear command default values
   gear_cmd_ = raptor_dbw_msgs::msg::GearCmd();
-  gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::PARK;
+  gear_cmd_.cmd.gear = raptor_dbw_msgs::msg::Gear::NONE;
   gear_cmd_.enable = true;
   gear_cmd_.rolling_counter = 0;
 
