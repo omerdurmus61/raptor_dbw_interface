@@ -22,6 +22,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   accel_cmd_.accel_limit                = max_accel_;
   accel_cmd_.accel_positive_jerk_limit  = max_jerk_;
   accel_cmd_.enable                     = true;
+  accel_cmd_.ignore                     = false;
 
   // Brake command default values
   brake_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
@@ -30,6 +31,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   // Steering command default values
   steer_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   steer_cmd_.enable                     = true;
+  steer_cmd_.ignore                     = false;
 
   // Gear command default values
   gear_cmd_ = raptor_dbw_msgs::msg::GearCmd();
