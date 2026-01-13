@@ -9,6 +9,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
   max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
   max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
+  wheel_radius_   = this->declare_parameter<double>("wheel_radius", 0.365);      // m 
 
   // Override flags
   brake_override_active_    = false;
@@ -157,6 +158,8 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
     brake_cmd_.pedal_cmd = 100.0;
   } else {
     brake_cmd_.pedal_cmd = 0.0;
+    accel_cmd_.speed_cmd = 0.0;
+
   }
 
   // Steering command
@@ -244,10 +247,10 @@ void RaptorDbwInterface::brakeReportCallback(const raptor_dbw_msgs::msg::BrakeRe
 
 void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::WheelSpeedReport::SharedPtr msg)
 { 
-  (void)msg;
+  //(void)msg;
   // TO DO: odometry model might be used here
 
-  /*
+  
   // TO DO: The velocity_status can be calculated based on the velocity of each wheel 
   autoware_vehicle_msgs::msg::VelocityReport out;
   out.header.stamp = this->now();
@@ -255,11 +258,12 @@ void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::Wh
   // Average Velocity (m/s)
   double avg_speed = (wheel_radius_ * (msg->front_left + msg->front_right +
                                      msg->rear_left + msg->rear_right)) / 4.0;
-
+                                    
+  out.header.frame_id = "base_link";
   out.longitudinal_velocity = avg_speed;
 
   velocity_pub_->publish(out);
-  */
+  
 }
 
 void RaptorDbwInterface::gearReportCallback(
@@ -327,16 +331,16 @@ void RaptorDbwInterface::driverInputReportCallback(
 
 void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg)
 { 
-
+  /*
   // Velocity Report
   autoware_vehicle_msgs::msg::VelocityReport out;
   out.header.stamp = this->now();
-
+  
   // The WheelSpeedReport topic might be used to calculate the average velocity of the wheels
   out.longitudinal_velocity = msg->vehicle_speed / 3.6; // DBW (km/h) -> Autoware (m/s)
-
+  out.header.frame_id = "base_link";
   velocity_pub_->publish(out);
-
+  */
   // Control Mode Report 
   autoware_vehicle_msgs::msg::ControlModeReport out_control_mode;
   out_control_mode.stamp = this->now();

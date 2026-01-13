@@ -1,6 +1,7 @@
 raptor_dbw_interface:
   ros__parameters:
     steering_ratio: 16.2  # steering wheel angle(deg) / tier angle(rad)
-    max_decel     : 5.0  # m/s^2
-    max_accel     : 2.0  # m/s^2
-    max_jerk      : 1.0  # m/s^3
+    max_decel     : 5.0   # m/s^2
+    max_accel     : 2.0   # m/s^2
+    max_jerk      : 1.0   # m/s^3
+    wheel_radius  : 0.365 # m
