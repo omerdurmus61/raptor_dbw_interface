@@ -9,7 +9,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
   max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
   max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
-  wheel_radius_   = this->declare_parameter<double>("wheel_radius", 0.365);      // m 
+  wheel_radius_   = this->declare_parameter<double>("wheel_radius", 0.365);     // m 
 
   // Override flags
   brake_override_active_    = false;
@@ -144,7 +144,11 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 {
   // Extract data from Autoware control command
   // Accelerator command 
+  if (msg->longitudinal.velocity > 0.0 && msg->longitudinal.velocity < 0.35)
+  accel_cmd_.speed_cmd = 0.35;
+  else
   accel_cmd_.speed_cmd                  = msg->longitudinal.velocity;
+  
   accel_cmd_.enable                     = true;
   accel_cmd_.accel_limit                = max_accel_;  
   accel_cmd_.accel_positive_jerk_limit  = max_jerk_;  
@@ -158,8 +162,6 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
     brake_cmd_.pedal_cmd = 100.0;
   } else {
     brake_cmd_.pedal_cmd = 0.0;
-    accel_cmd_.speed_cmd = 0.0;
-
   }
 
   // Steering command
