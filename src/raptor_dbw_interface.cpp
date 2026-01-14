@@ -144,11 +144,8 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
 {
   // Extract data from Autoware control command
   // Accelerator command 
-  if (msg->longitudinal.velocity > 0.0 && msg->longitudinal.velocity < 0.35)
-  accel_cmd_.speed_cmd = 0.35;
-  else
+
   accel_cmd_.speed_cmd                  = msg->longitudinal.velocity;
-  
   accel_cmd_.enable                     = true;
   accel_cmd_.accel_limit                = max_accel_;  
   accel_cmd_.accel_positive_jerk_limit  = max_jerk_;  
