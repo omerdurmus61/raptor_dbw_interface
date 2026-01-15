@@ -9,7 +9,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
   max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
   max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
-  wheel_radius_   = this->declare_parameter<double>("wheel_radius", 0.365);     // m 
+  wheel_radius_   = this->declare_parameter<double>("wheel_radius", 0.365);    // m 
 
   // Override flags
   brake_override_active_    = false;
@@ -165,7 +165,7 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   // Autoware (tire angle) → DBW (steering wheel angle)
   steer_cmd_.angle_cmd          = msg->lateral.steering_tire_angle * steering_ratio_ * 180.0 / M_PI;
   steer_cmd_.enable             = true;
-  steer_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  steer_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_ACTUATOR;
 
 }
 
