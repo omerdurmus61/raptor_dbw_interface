@@ -30,7 +30,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   brake_cmd_.enable                     = true;
 
   // Steering command default values
-  steer_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  steer_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_ACTUATOR;
   steer_cmd_.enable                     = true;
   steer_cmd_.ignore                     = false;
 
