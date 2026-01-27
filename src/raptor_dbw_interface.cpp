@@ -58,16 +58,19 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   enable_cmd_.global_enable = true;
   enable_cmd_.rolling_counter = 0; 
   enable_cmd_.enable_joystick_limits = true;
+  
+  local_enable_cmd_ = std_msgs::msg::Empty();
 
   counter_ = 0;
 
   // Publishers (to Raptor DBW)
-  accel_pub_    = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>                ("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
-  brake_pub_    = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>                           ("/raptor_dbw_interface/brake_cmd", 10);
-  steering_pub_ = this->create_publisher<raptor_dbw_msgs::msg::SteeringCmd>                        ("/raptor_dbw_interface/steering_cmd", 10);
-  gear_pub_     = this->create_publisher<raptor_dbw_msgs::msg::GearCmd>                            ("/raptor_dbw_interface/gear_cmd", 10);
-  enable_pub_   = this->create_publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>                    ("/raptor_dbw_interface/global_enable_cmd", 10);
-  misc_pub_     = this->create_publisher<raptor_dbw_msgs::msg::MiscCmd>                            ("/raptor_dbw_interface/misc_cmd", 10);
+  accel_pub_        = this->create_publisher<raptor_dbw_msgs::msg::AcceleratorPedalCmd>                ("/raptor_dbw_interface/accelerator_pedal_cmd", 10);
+  brake_pub_        = this->create_publisher<raptor_dbw_msgs::msg::BrakeCmd>                           ("/raptor_dbw_interface/brake_cmd", 10);
+  steering_pub_     = this->create_publisher<raptor_dbw_msgs::msg::SteeringCmd>                        ("/raptor_dbw_interface/steering_cmd", 10);
+  gear_pub_         = this->create_publisher<raptor_dbw_msgs::msg::GearCmd>                            ("/raptor_dbw_interface/gear_cmd", 10);
+  enable_pub_       = this->create_publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>                    ("/raptor_dbw_interface/global_enable_cmd", 10);
+  misc_pub_         = this->create_publisher<raptor_dbw_msgs::msg::MiscCmd>                            ("/raptor_dbw_interface/misc_cmd", 10);
+  local_enable_pub_ = this->create_publisher<std_msgs::msg::Empty>                                     ("/raptor_dbw_interface/enable", 10);
 
   // Publishers (to Autoware reports)
   control_mode_pub_     = this->create_publisher<autoware_vehicle_msgs::msg::ControlModeReport>    ("/vehicle/status/control_mode", 10);
@@ -326,6 +329,11 @@ void RaptorDbwInterface::driverInputReportCallback(
 
   turn_indicators_pub_->publish(out);
   hazard_lights_pub_->publish(out_hazard_lights_report);
+
+  if(msg->steer_wheel_button_e){
+    local_enable_pub_->publish(local_enable_cmd_);
+  }
+
 }
 
 void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg)
