@@ -209,7 +209,7 @@ void RaptorDbwInterface::publishAutowareControlCmdTimerCallback ()
 
   // Publish Vehicle control commands
   accel_pub_->publish(accel_cmd_);
-  //brake_pub_->publish(brake_cmd_);
+  brake_pub_->publish(brake_cmd_);
   steering_pub_->publish(steer_cmd_);
 
   // Publish Gear command (default DRIVE)
