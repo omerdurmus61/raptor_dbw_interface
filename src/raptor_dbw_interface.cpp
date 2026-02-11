@@ -344,12 +344,10 @@ void RaptorDbwInterface::driverInputReportCallback(
   turn_indicators_pub_->publish(out);
   hazard_lights_pub_->publish(out_hazard_lights_report);
 
-  if(msg->steer_wheel_button_e && !is_local_enabled_){
+  if(msg->steer_wheel_button_e && !msg->steer_wheel_button_b){
     local_enable_pub_->publish(local_enable_cmd_);
-    is_local_enabled_ = true;
   }
-  else if(msg->steer_wheel_button_e && is_local_enabled_){
-    is_local_enabled_ = false;
+  else if(msg->steer_wheel_button_b && !msg->steer_wheel_button_e){
     local_disable_pub_->publish(local_disable_cmd_);
   }
 
