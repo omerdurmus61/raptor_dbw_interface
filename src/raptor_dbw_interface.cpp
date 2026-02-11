@@ -16,6 +16,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   accel_override_active_    = false;
   steering_override_active_ = false;
   global_enable_active_     = true;
+  is_local_enabled_         = false;
 
   // Initial default values for Autoware command inputs (accel, brake, steer, gear, misc, and enable)
   // Acceleration command default values
@@ -60,6 +61,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   enable_cmd_.enable_joystick_limits = true;
   
   local_enable_cmd_ = std_msgs::msg::Empty();
+  local_disable_cmd_ = std_msgs::msg::Empty();
 
   counter_ = 0;
 
@@ -71,6 +73,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   enable_pub_       = this->create_publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>                    ("/raptor_dbw_interface/global_enable_cmd", 10);
   misc_pub_         = this->create_publisher<raptor_dbw_msgs::msg::MiscCmd>                            ("/raptor_dbw_interface/misc_cmd", 10);
   local_enable_pub_ = this->create_publisher<std_msgs::msg::Empty>                                     ("/raptor_dbw_interface/enable", 10);
+  local_disable_pub_= this->create_publisher<std_msgs::msg::Empty>                                     ("/raptor_dbw_interface/disable", 10);
 
   // Publishers (to Autoware reports)
   control_mode_pub_     = this->create_publisher<autoware_vehicle_msgs::msg::ControlModeReport>    ("/vehicle/status/control_mode", 10);
@@ -341,8 +344,12 @@ void RaptorDbwInterface::driverInputReportCallback(
   turn_indicators_pub_->publish(out);
   hazard_lights_pub_->publish(out_hazard_lights_report);
 
-  if(msg->steer_wheel_button_e){
+  if(msg->steer_wheel_button_e && !is_local_enabled_){
     local_enable_pub_->publish(local_enable_cmd_);
+    is_local_enabled_ = true;
+  }
+  else if(msg->steer_wheel_button_e && is_local_enabled_){
+    is_local_enabled_ = false;
   }
 
 }

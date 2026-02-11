@@ -89,6 +89,7 @@ private:
   rclcpp::Publisher<raptor_dbw_msgs::msg::GlobalEnableCmd>::SharedPtr            enable_pub_;
   rclcpp::Publisher<raptor_dbw_msgs::msg::MiscCmd>::SharedPtr                    misc_pub_;
   rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr                             local_enable_pub_;
+  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr                             local_disable_pub_;
 
   // Subscribers (from DBW reports)
   rclcpp::Subscription<raptor_dbw_msgs::msg::SteeringReport>::SharedPtr          steering_report_sub_;
@@ -122,12 +123,14 @@ private:
   raptor_dbw_msgs::msg::MiscCmd           misc_hazard_cmd_;
   raptor_dbw_msgs::msg::GlobalEnableCmd   enable_cmd_;
   std_msgs::msg::Empty                    local_enable_cmd_;
+  std_msgs::msg::Empty                    local_disable_cmd_;
 
   // Override flags
   bool brake_override_active_;
   bool accel_override_active_;
   bool steering_override_active_;
   bool global_enable_active_;
+  bool is_local_enabled_;
 
   // Vehicle parameters
   double steering_ratio_;  
