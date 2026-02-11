@@ -350,6 +350,7 @@ void RaptorDbwInterface::driverInputReportCallback(
   }
   else if(msg->steer_wheel_button_e && is_local_enabled_){
     is_local_enabled_ = false;
+    local_disable_pub_->publish(local_disable_cmd_);
   }
 
 }
