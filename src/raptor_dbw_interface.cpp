@@ -16,7 +16,6 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   accel_override_active_    = false;
   steering_override_active_ = false;
   global_enable_active_     = true;
-  is_local_enabled_         = false;
 
   // Initial default values for Autoware command inputs (accel, brake, steer, gear, misc, and enable)
   // Acceleration command default values
@@ -161,7 +160,7 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   brake_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
   brake_cmd_.enable    = true;
 
-  if (msg->longitudinal.velocity <= 0.0) {
+  if (msg->longitudinal.velocity <= 0.0 && velocity_report_.longitudinal_velocity <= 0.0) {
     brake_cmd_.pedal_cmd = 100.0;
   } else {
     brake_cmd_.pedal_cmd = 0.0;
@@ -265,20 +264,22 @@ void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::Wh
 { 
   //(void)msg;
   // TO DO: odometry model might be used here
-
+  
   
   // TO DO: The velocity_status can be calculated based on the velocity of each wheel 
-  autoware_vehicle_msgs::msg::VelocityReport out;
-  out.header.stamp = this->now();
-
+  //autoware_vehicle_msgs::msg::VelocityReport out;
+  //out.header.stamp = this->now();
+  velocity_report_.header.stamp = this->now();
   // Average Velocity (m/s)
   double avg_speed = (wheel_radius_ * (msg->front_left + msg->front_right +
                                      msg->rear_left + msg->rear_right)) / 4.0;
                                     
-  out.header.frame_id = "base_link";
-  out.longitudinal_velocity = avg_speed;
+  //out.header.frame_id = "base_link";
+  //out.longitudinal_velocity = avg_speed;
+  velocity_report_.header.frame_id = "base_link";
+  velocity_report_.longitudinal_velocity = avg_speed;
 
-  velocity_pub_->publish(out);
+  velocity_pub_->publish(velocity_report_);
   
 }
 

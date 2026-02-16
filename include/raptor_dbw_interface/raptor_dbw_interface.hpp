@@ -64,6 +64,9 @@ private:
   raptor_dbw_msgs::msg::SteeringCmd                 steer_cmd_;
   rclcpp::TimerBase::SharedPtr                      autoware_cmd_timer_;
 
+  // Autoware Status msgs
+  autoware_vehicle_msgs::msg::VelocityReport        velocity_report_;
+
   // Subscribers (from Autoware)
   rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr               ackermann_sub_;
   rclcpp::Subscription<autoware_vehicle_msgs::msg::GearCommand>::SharedPtr           gear_cmd_sub_;
@@ -130,7 +133,6 @@ private:
   bool accel_override_active_;
   bool steering_override_active_;
   bool global_enable_active_;
-  bool is_local_enabled_;
 
   // Vehicle parameters
   double steering_ratio_;  
@@ -138,6 +140,7 @@ private:
   double max_accel_;
   double max_jerk_;
   double wheel_radius_;
+
 };
 
 #endif  // RAPTOR_DBW_INTERFACE__RAPTOR_DBW_INTERFACE_HPP_
