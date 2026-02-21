@@ -3,7 +3,7 @@
   <name>raptor_dbw_interface</name>
   <version>0.0.0</version>
   <description>Vehicle interface for Raptor DBW with Autoware</description>
-  <maintainer email="omer@mnm.com.tr">omer</maintainer>
+  <maintainer email="omercandurmuss@gmail.com">omer</maintainer>
   <license>BSD-3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -11,8 +11,10 @@
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>raptor_dbw_msgs</depend>
-  <depend>geometry_msgs</depend>
   <depend>ackermann_msgs</depend>
+  <depend>tf2</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
 
   <depend>autoware_control_msgs</depend>
   <depend>autoware_vehicle_msgs</depend>

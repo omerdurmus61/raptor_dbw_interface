@@ -265,17 +265,12 @@ void RaptorDbwInterface::wheelSpeedReportCallback(const raptor_dbw_msgs::msg::Wh
   //(void)msg;
   // TO DO: odometry model might be used here
   
-  
   // TO DO: The velocity_status can be calculated based on the velocity of each wheel 
-  //autoware_vehicle_msgs::msg::VelocityReport out;
-  //out.header.stamp = this->now();
   velocity_report_.header.stamp = this->now();
   // Average Velocity (m/s)
   double avg_speed = (wheel_radius_ * (msg->front_left + msg->front_right +
                                      msg->rear_left + msg->rear_right)) / 4.0;
                                     
-  //out.header.frame_id = "base_link";
-  //out.longitudinal_velocity = avg_speed;
   velocity_report_.header.frame_id = "base_link";
   velocity_report_.longitudinal_velocity = avg_speed;
 

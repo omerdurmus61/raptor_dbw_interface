@@ -1,7 +1,12 @@
 raptor_dbw_interface:
   ros__parameters:
-    steering_ratio: 16.2  # steering wheel angle(deg) / tier angle(rad)
-    max_decel     : 5.0   # m/s^2
-    max_accel     : 2.0   # m/s^2
-    max_jerk      : 1.0   # m/s^3
-    wheel_radius  : 0.365 # m
+    steering_ratio   : 16.2  # steering wheel angle(deg) / tier angle(rad)
+    max_decel        : 5.0   # m/s^2
+    max_accel        : 2.0   # m/s^2
+    max_jerk         : 1.0   # m/s^3
+    wheel_radius     : 0.365 # m
+    wheel_base       : 3.0   # m (Distance between front and rear axles)
+    wheel_seperetion : 2.5   # m (Distance between left and right steering wheels)
+    odom_frame       : "raptor_encoder_odom"   # odom frame name for encoder odometry usage
+    base_link_frame  : "raptor_base_link"      # base link frame name for encoder odometry usage
+    publish_tf       : true                    
