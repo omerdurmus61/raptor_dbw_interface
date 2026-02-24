@@ -50,6 +50,7 @@ private:
 
   // Callback functions for vehicle control 
   void ackermannCmdCallback (const autoware_control_msgs::msg::Control::SharedPtr msg);
+  void actuationCmdCallback (const tier4_vehicle_msgs::msg::ActuationCommandStamped::SharedPtr msg);
   void gearCmdCallback      (const autoware_vehicle_msgs::msg::GearCommand::SharedPtr msg);
   void turnCmdCallback      (const autoware_vehicle_msgs::msg::TurnIndicatorsCommand::SharedPtr msg);
   void hazardCmdCallback    (const autoware_vehicle_msgs::msg::HazardLightsCommand::SharedPtr msg);
@@ -69,6 +70,7 @@ private:
 
   // Subscribers (from Autoware)
   rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr               ackermann_sub_;
+  rclcpp::Subscription<tier4_vehicle_msgs::msg::ActuationCommandStamped>::SharedPtr  actuation_sub_;
   rclcpp::Subscription<autoware_vehicle_msgs::msg::GearCommand>::SharedPtr           gear_cmd_sub_;
   rclcpp::Subscription<autoware_vehicle_msgs::msg::TurnIndicatorsCommand>::SharedPtr turn_cmd_sub_;
   rclcpp::Subscription<autoware_vehicle_msgs::msg::HazardLightsCommand>::SharedPtr   hazard_cmd_sub_;
@@ -140,7 +142,7 @@ private:
   double max_accel_;
   double max_jerk_;
   double wheel_radius_;
-
+  bool   use_pedal_control_;
 };
 
 #endif  // RAPTOR_DBW_INTERFACE__RAPTOR_DBW_INTERFACE_HPP_

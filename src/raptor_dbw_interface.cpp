@@ -5,11 +5,12 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
 { 
 
   // Vehicle Parameters
-  steering_ratio_ = this->declare_parameter<double>("steering_ratio", 16.2);   // steering_wheel (deg) / tier angle (rad)
-  max_decel_      = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
-  max_accel_      = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
-  max_jerk_       = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
-  wheel_radius_   = this->declare_parameter<double>("wheel_radius", 0.365);    // m 
+  steering_ratio_     = this->declare_parameter<double>("steering_ratio", 16.2);   // steering_wheel (deg) / tier angle (rad)
+  max_decel_          = this->declare_parameter<double>("max_decel", 5.0);         // m/s^2
+  max_accel_          = this->declare_parameter<double>("max_accel", 2.0);         // m/s^2
+  max_jerk_           = this->declare_parameter<double>("max_jerk", 1.0);          // m/s^3  
+  wheel_radius_       = this->declare_parameter<double>("wheel_radius", 0.365);    // m 
+  use_pedal_control_ =  this->declare_parameter<bool>("use_pedal_control", false);
 
   // Override flags
   brake_override_active_    = false;
@@ -88,9 +89,22 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   autoware_cmd_timer_ = this->create_wall_timer(200ms,std::bind(&RaptorDbwInterface::publishAutowareControlCmdTimerCallback, this));
 
   // Subscribers (from Autoware)
-  ackermann_sub_ = this->create_subscription<autoware_control_msgs::msg::Control>(
-    "/control/command/control_cmd",10,
-    std::bind(&RaptorDbwInterface::ackermannCmdCallback, this, std::placeholders::_1));
+  if(!use_pedal_control_)
+    {
+    ackermann_sub_ = this->create_subscription<autoware_control_msgs::msg::Control>(
+      "/control/command/control_cmd",10,
+      std::bind(&RaptorDbwInterface::ackermannCmdCallback, this, std::placeholders::_1));
+
+      RCLCPP_INFO(this->get_logger(), "Control mode: VELOCITY (sub: /control/command/control_cmd)");
+
+    }else
+    {
+    actuation_sub_ = this->create_subscription<tier4_vehicle_msgs::msg::ActuationCommandStamped>(
+      "/vehicle/command/actuation_cmd",10,
+      std::bind(&RaptorDbwInterface::actuationCmdCallback, this, std::placeholders::_1));
+
+      RCLCPP_INFO(this->get_logger(), "Control mode: ACTUATION/PEDAL (sub: /vehicle/command/actuation_cmd)");
+    }
 
   // Subscribers (from Autoware additional topics)
   gear_cmd_sub_ = this->create_subscription<autoware_vehicle_msgs::msg::GearCommand>(
@@ -142,8 +156,35 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   RCLCPP_INFO(this->get_logger(), "RaptorDbwInterface node initialized.");
 }
 
+// === Autoware command → DBW === Pedal Position Based Control
+void RaptorDbwInterface::actuationCmdCallback(const tier4_vehicle_msgs::msg::ActuationCommandStamped::SharedPtr msg)
+{
+  // Extract data from Autoware control command
+  // Accelerator command 
 
-// === Autoware command → DBW ===
+  accel_cmd_.speed_cmd                  = abs(msg->actuation.accel_cmd);
+  accel_cmd_.enable                     = true;
+  accel_cmd_.accel_limit                = max_accel_;  
+  accel_cmd_.accel_positive_jerk_limit  = max_jerk_;  
+  accel_cmd_.control_type.value         = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+
+  // Brake command
+  brake_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_VEHICLE;
+  brake_cmd_.enable    = true;
+  brake_cmd_.pedal_cmd = msg->actuation.brake_cmd;
+
+  // Steering command
+  // Autoware (tire angle) → DBW (steering wheel angle)
+  //steer_cmd_.angle_cmd          = msg->lateral.steering_tire_angle * steering_ratio_ * 180.0 / M_PI;
+  steer_cmd_.angle_cmd          = msg->actuation.steer_cmd;
+  
+  //steer_cmd_.angle_velocity     = msg->lateral.steering_tire_rotation_rate * steering_ratio_ * 180.0 / M_PI;
+  steer_cmd_.enable             = true;
+  steer_cmd_.control_type.value = raptor_dbw_msgs::msg::ActuatorControlMode::CLOSED_LOOP_ACTUATOR;
+
+}
+
+// === Autoware command → DBW === Velocity Referance Based Control
 void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::Control::SharedPtr msg)
 
 {
@@ -349,7 +390,7 @@ void RaptorDbwInterface::driverInputReportCallback(
 
 }
 
-void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscReport::SharedPtr msg)
+void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscReport::SharedPtr /*msg*/)
 { 
   /*
   // Velocity Report

@@ -14,8 +14,15 @@ def generate_launch_description():
     )
 
     use_encoder_odometry = LaunchConfiguration('use_encoder_odometry')
+    use_pedal_control    = LaunchConfiguration('use_pedal_control')
 
     return LaunchDescription([
+
+        DeclareLaunchArgument(
+            'use_pedal_control',
+            default_value='false',
+            description='If true: pedal mode, else: velocity mode'
+        ),
         
         DeclareLaunchArgument(
                 'use_encoder_odometry',
@@ -27,7 +34,7 @@ def generate_launch_description():
             package='raptor_dbw_interface',
             executable='raptor_dbw_interface_node',
             name='raptor_dbw_interface',
-            parameters=[config],
+            parameters=[config, {'use_pedal_control': use_pedal_control} ],
             output='screen'
         ),
         Node(

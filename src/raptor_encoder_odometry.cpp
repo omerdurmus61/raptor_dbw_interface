@@ -16,6 +16,14 @@ RaptorEncoderOdometry::RaptorEncoderOdometry(const rclcpp::NodeOptions & options
   base_link_frame_    = this->declare_parameter<std::string>("base_link_frame", "raptor_base_link");   
   publish_tf_         = this->declare_parameter<bool>("publish_tf", true);   
 
+  RCLCPP_INFO(
+        this->get_logger(),
+        "Encoder odometry node initialized (odom_frame=%s, base_link=%s, tf=%s)",
+        odom_frame_.c_str(),
+        base_link_frame_.c_str(),
+        publish_tf_ ? "on" : "off"
+      );
+
   lin_velocity_ = 0.0;
   steering_status_ = 0.0;
   x_dot_ = 0.0;
