@@ -19,7 +19,7 @@ def generate_launch_description():
         
         DeclareLaunchArgument(
                 'use_encoder_odometry',
-                default_value= 'true',
+                default_value= 'false',
                 description = 'Run encoder odometry node'
             ),
 
