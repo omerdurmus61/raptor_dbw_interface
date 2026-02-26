@@ -83,7 +83,7 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 ---
 
 ## Development Path
-## 🔹 Autoware → DBW
+##  Autoware → DBW
 
 ### Timers
 
@@ -132,7 +132,7 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 
 ---
 
-## 🔹 DBW → Autoware
+##  DBW → Autoware
 
 ### Subscribers
 
@@ -182,7 +182,7 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 
 ---
 
-## 🔹 Summary
+##  Summary
 
 * **Subscribers (12)** → each has a dedicated callback  
 * **Publishers (11)** → triggered inside corresponding callbacks/timers  
@@ -203,15 +203,15 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 
 ---
 
-## 🔹 TO DO List
+##  TO DO List
 
-- [ ] Local odometry data can be provided using encoder values. DBW already publishes wheel speed and wheel position on the following topics:
+- [x] Local odometry data can be provided using encoder values. DBW already publishes wheel speed and wheel position on the following topics:
 /raptor_dbw_interface/wheel_speed_report & /raptor_dbw_interface/wheel_position_report
 
 - [x] Velocity status should be derived from the average velocity of all wheels, using the /raptor_dbw_interface/wheel_speed_report topic.
 
-- [ ] Control mode status is currently published inside the misc callback. This logic should be moved into the enable callback for better structure.
+- [x] Control mode status is currently published inside the misc callback. This logic should be moved into the enable callback for better structure.
 
-- [ ] The vehicle interface package currently supports velocity-reference-based driving; integrate it to also support pedal-position-based reference from Autoware.
+- [x] The vehicle interface package currently supports velocity-reference-based driving; integrate it to also support pedal-position-based reference from Autoware.
 
 ---
