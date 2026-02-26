@@ -162,7 +162,7 @@ void RaptorDbwInterface::actuationCmdCallback(const tier4_vehicle_msgs::msg::Act
   // Extract data from Autoware control command
   // Accelerator command 
 
-  accel_cmd_.speed_cmd                  = abs(msg->actuation.accel_cmd);
+  accel_cmd_.pedal_cmd                  = abs(msg->actuation.accel_cmd);
   accel_cmd_.enable                     = true;
   accel_cmd_.accel_limit                = max_accel_;  
   accel_cmd_.accel_positive_jerk_limit  = max_jerk_;  
