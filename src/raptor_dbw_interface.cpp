@@ -86,7 +86,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   
   // Actuation status and Autoware command timers  50Hz
   actuation_timer_    = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishActuationStatusTimerCallback, this));
-  autoware_cmd_timer_ = this->create_wall_timer(200ms,std::bind(&RaptorDbwInterface::publishAutowareControlCmdTimerCallback, this));
+  autoware_cmd_timer_ = this->create_wall_timer(20ms,std::bind(&RaptorDbwInterface::publishAutowareControlCmdTimerCallback, this));
 
   // Subscribers (from Autoware)
   if(!use_pedal_control_)
@@ -202,7 +202,7 @@ void RaptorDbwInterface::ackermannCmdCallback(const autoware_control_msgs::msg::
   brake_cmd_.enable    = true;
 
   if (msg->longitudinal.velocity <= 0.0 && velocity_report_.longitudinal_velocity <= 0.0) {
-    brake_cmd_.pedal_cmd = 100.0;
+    brake_cmd_.pedal_cmd = 0.0;
   } else {
     brake_cmd_.pedal_cmd = 0.0;
   }
