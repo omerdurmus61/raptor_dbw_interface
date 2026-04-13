@@ -414,8 +414,10 @@ void RaptorDbwInterface::miscReportCallback(const raptor_dbw_msgs::msg::MiscRepo
 
   if (global_enable_active_ && !driver_override) {
     out_control_mode.mode = autoware_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
+    global_enable_active_ = true;
   } else {
     out_control_mode.mode = autoware_vehicle_msgs::msg::ControlModeReport::MANUAL;
+    global_enable_active_ = false;
   }
   control_mode_pub_->publish(out_control_mode);
 
