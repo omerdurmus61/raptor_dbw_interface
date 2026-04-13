@@ -383,9 +383,11 @@ void RaptorDbwInterface::driverInputReportCallback(
 
   if(msg->steer_wheel_button_e && !msg->steer_wheel_button_b){
     local_enable_pub_->publish(local_enable_cmd_);
+    global_enable_active_ = true;
   }
   else if(msg->steer_wheel_button_b && !msg->steer_wheel_button_e){
     local_disable_pub_->publish(local_disable_cmd_);
+    global_enable_active_ = false;
   }
 
 }
@@ -474,6 +476,5 @@ void RaptorDbwInterface::hazardCmdCallback(
 void RaptorDbwInterface::engageCallback(const std_msgs::msg::Bool::SharedPtr msg)
 {
   enable_cmd_.global_enable = msg->data;
-  global_enable_active_ = msg->data;
 }
 
