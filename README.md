@@ -3,6 +3,10 @@ Autoware vehicle interface for New Eagle Raptor DBW (drive-by-wire)
 
 `raptor_dbw_interface` is a ROS 2 package to connect Autoware with Raptor DBW hardware.
 
+### Autoware Vehicle Interface for New Eagle Raptor DBW (Drive-By-Wire)
+
+![Autoware Vehicle Interface](images/vehicle_interface_flowchart.png)
+
 ### Communication Architecture between Autoware and New Eagle Raptor DBW (drive-by-wire) 
 
   | Subscribed Topic from Autoware                   | Published Topic via DBW                           | Second Topic (accel & brake pedal etc.) or notes                        |          
