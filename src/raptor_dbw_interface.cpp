@@ -58,7 +58,7 @@ RaptorDbwInterface::RaptorDbwInterface(const rclcpp::NodeOptions & options)
   enable_cmd_ = raptor_dbw_msgs::msg::GlobalEnableCmd();
   enable_cmd_.global_enable = true;
   enable_cmd_.rolling_counter = 0; 
-  enable_cmd_.enable_joystick_limits = true;
+  enable_cmd_.enable_joystick_limits = false;
   
   local_enable_cmd_ = std_msgs::msg::Empty();
   local_disable_cmd_ = std_msgs::msg::Empty();
